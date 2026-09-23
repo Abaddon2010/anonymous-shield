@@ -37,7 +37,7 @@ flowchart LR
   em campo — se testar, [abra uma issue](../../issues) contando o resultado
   (provedor, modo, funcionou ou não). Testadores são bem-vindos!
 - Gostou do projeto e quer ver esse e outros recursos evoluindo?
-  ☕ **[Compre-me um café](https://www.buymeacoffee.com/SEU-USUARIO)** — qualquer
+  ☕ **[Doe via PayPal](https://www.paypal.com/donate/?hosted_button_id=U9K49V44Q7PAE)** — qualquer
   valor ajuda a pagar tempo de desenvolvimento e testes.
 
 ## 📁 Layout
