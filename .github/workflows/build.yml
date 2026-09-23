@@ -1,0 +1,93 @@
+name: Build AnonymousShield (Windows exe)
+
+# Repo raiz: Test/ — o projeto mora em anonymous-shield/
+on:
+  push:
+    branches: [master, main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: anonymous-shield
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: anonymous-shield/requirements.txt
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build exe (PyInstaller)
+        run: python -m PyInstaller --noconfirm AnonymousShield.spec
+
+      - name: Smoke test (exe exists)
+        shell: pwsh
+        working-directory: ${{ github.workspace }}
+        run: |
+          Get-ChildItem anonymous-shield/dist/
+          if (-not (Test-Path anonymous-shield/dist/AnonymousShield.exe)) { throw "exe nao gerado" }
+
+      - name: Upload exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: AnonymousShield-windows
+          path: anonymous-shield/dist/AnonymousShield.exe
+          if-no-files-found: error
+
+      - name: Build installer (Inno Setup, se disponível)
+        shell: pwsh
+        run: |
+          if (Test-Path installer.iss) {
+            $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+            if (Test-Path $iscc) { & $iscc installer.iss } else { Write-Host "ISCC nao instalado, pulando instalador" }
+          }
+          Get-ChildItem installer-out/ -ErrorAction SilentlyContinue
+
+      - name: Upload installer
+        if: hashFiles('anonymous-shield/installer-out/*.exe') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: AnonymousShield-setup
+          path: anonymous-shield/installer-out/*.exe
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download exe
+        uses: actions/download-artifact@v4
+        with:
+          name: AnonymousShield-windows
+          path: dist
+      - name: Download installer
+        uses: actions/download-artifact@v4
+        with:
+          name: AnonymousShield-setup
+          path: installer-out
+        continue-on-error: true
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/AnonymousShield.exe
+            installer-out/*.exe
+          body: |
+            Anonymous Shield ${{ github.ref_name }} — exe Windows (PyInstaller, onefile).
+            Licença dupla Apache-2.0 / GPL-3.0. SHA-256 publicado nos assets. Ver anonymous-shield/CHANGELOG.md.

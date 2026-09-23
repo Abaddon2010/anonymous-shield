@@ -1,0 +1,22 @@
+Anonymous Shield — pacote portátil (Windows 64-bit)
+============================================
+Não precisa instalar nem instalar Python: tudo vai dentro do .exe
+(PyQt6, Tor 0.4.9.12, bridges obfs4/conjure, scanner nmap se instalado).
+
+COMO USAR
+1. Extraia a pasta onde quiser (ou rode daqui mesmo).
+2. Abra o AnonymousShield.exe > "Sem usuário" (entra direto, sem senha)
+   ou crie um perfil local (senha mín. 8; 3 erros APAGAM o perfil!).
+3. Clique em Conectar (cebola) e aguarde 100%.
+4. Abra o Chrome pelo botão "Abrir com Tor" (perfil Tor dedicado).
+
+SE FICAR SEM INTERNET
+- Opção 1: Diagnóstico > "Restaurar internet".
+- Opção 2: rode o AnonymousShield-Rescue.bat como administrador.
+
+AVISOS
+- Sites veem o IP de SAÍDA do Tor (ex.: Canadá) — isso é o normal.
+  Seu IP real vaza se usar o Chrome normal (use o botão do app).
+- Firefox ignora proxy do sistema: use "Abrir com Tor".
+- Kill-switch/proteção total exige administrador.
+- Verificação do programa: SHA-256 do seu exe confira na página do release.
