@@ -63,10 +63,27 @@ def _forensics() -> None:
         _fh_file = open(os.path.join(_data, "crash.log"), "w")
         _forensics_state["fh"] = _fh_file
         _fh.enable(file=_fh_file)
+        try:
+            _home = os.path.expanduser("~")
+        except Exception:
+            _home = ""
+        _user = os.environ.get("USERNAME", "") or os.environ.get("USER", "")
+
+        def _scrub(s: str) -> str:
+            try:
+                if _home and len(_home) > 3:
+                    s = s.replace(_home, "~")
+                if _user and len(_user) > 2:
+                    import re as _re
+                    s = _re.sub(r"(?i)(users|home)[/\\]" + _re.escape(_user), r"\1/~", s)
+            except Exception:
+                pass
+            return s
+
         def _hook(t, v, tb) -> None:
             try:
                 with open(os.path.join(_data, "error.log"), "a", encoding="utf-8") as f:
-                    f.write("".join(_tb.format_exception(t, v, tb)) + "\n")
+                    f.write(_scrub("".join(_tb.format_exception(t, v, tb))) + "\n")
             except Exception:
                 pass
         sys.excepthook = _hook

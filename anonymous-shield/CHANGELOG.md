@@ -1,5 +1,26 @@
 # Changelog — Anonymous Shield
 
+## [1.8.2] — 2026-09-23 — Bridges confiáveis + Furtivo + Linux completo
+
+### Verificado
+- **Tor embutido 0.4.9.12 = stable oficial** (conferido em 2026-09-23 em
+  torproject.org/download/tor; Expert Bundle 15.0.23). Checagem mensal
+  automática via Actions (`tor-check.yml` vs `vendor/TOR_VERSION`).
+
+### Adicionado
+- 🥷 Modo Furtivo (1 clique): VPN + obfs4 + nunca-armazenar-logs contra a provedora.
+- 🐧 Linux fase 2+3: kill-switch nftables, proxy GNOME, `.deb` + CI Ubuntu.
+- ⓘ Página Sobre com licenças integrais (inclui Apache-2.0/GPL-3.0 próprias).
+- 🚫 Nunca armazenar logs (torrc sem arquivo, forense só em RAM).
+- Validação de bridges no Aplicar (rejeita linha quebrada/inválida com aviso)
+  + bloqueio de preset snowflake/webtunnel sem binário + aviso de Tor desligado.
+- Auto-cola do clipboard na página Pontes; dicas nos itens da sidebar.
+- Update no Linux exige checksum publicado (sem Authenticode lá).
+
+### Corrigido
+- Rota sem contradição ("Pontes: N bridge(s)" em vez de "direto + bridges").
+- KPIs em padrão PT (Desligado/Parado/Ativo).
+
 ## [1.8.0] — 2026-09-21 — Renamed to Anonymous Shield
 
 ### Changed (brand)

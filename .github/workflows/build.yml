@@ -34,6 +34,14 @@ jobs:
       - name: Build exe (PyInstaller)
         run: python -m PyInstaller --noconfirm AnonymousShield.spec
 
+      - name: Version check (__init__ == installer.iss)
+        shell: pwsh
+        run: |
+          $pyver = (Select-String -Path anonshield/__init__.py -Pattern '__version__ = "([^"]+)"').Matches[0].Groups[1].Value
+          $issver = (Select-String -Path installer.iss -Pattern '#define MyAppVersion "([^"]+)"').Matches[0].Groups[1].Value
+          "app=$pyver installer=$issver"
+          if ($pyver -ne $issver) { throw "version mismatch: $pyver vs $issver" }
+
       - name: Smoke test (exe exists)
         shell: pwsh
         working-directory: ${{ github.workspace }}

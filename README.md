@@ -85,6 +85,36 @@ Linux firewall kill-switch uses **nftables** (root via pkexec) with an
 allowlist of current guards; system proxy via GNOME. Snowflake is
 incompatible with the kill-switch (dynamic UDP).
 
+## 🛡 Leak protection (no leaks outside Tor)
+
+Real IP can escape Tor three ways — **WebRTC** (browser leaks IP via STUN),
+**DNS** (queries outside the tunnel, incl. browser DoH bypassing proxy) and
+**unproxied apps** (Chrome ignores env vars). This app counters all three:
+
+- **Dedicated profiles** — Chromium forced via `--proxy-server` + Tor profile;
+  Firefox via `user.js` (WebRTC off, DoH off, remote DNS over SOCKS).
+- **Per-app** — each program gets its own SOCKS port + switch.
+- **🧱 Kill-switch** — firewall drops everything that isn't Tor
+  (Windows: netsh block-all + allow Tor; Linux: nftables guard allowlist).
+- **Leak test button** — opens `ipleak.net` in the locked-down browser so
+  you can *see* nothing leaks (IP, DNS, WebRTC).
+- **🥷 Stealth mode** (Tor page, 1 click) — VPN + obfs4 + never-store-logs
+  against ISP snooping.
+
+## 🔄 Tor refresh policy
+
+Bundled Tor comes from the official **Tor Expert Bundle** (Windows) and
+system packages (Linux). Because an outdated Tor is a real security risk:
+
+- Check for Tor security releases **every ~2 months** at
+  https://www.torproject.org/download/tor/ and
+  https://blog.torproject.org/.
+- Windows refresh: replace `anonymous-shield/vendor/tor/` +
+  `vendor/data/geoip*` with the new Expert Bundle, update `tor_ver`
+  expectations, rebuild, tag a release.
+- Linux needs nothing (uses distro `tor` via apt).
+- The Update page shows the bundled Tor version (`Tor x.y.z`).
+
 ## 📁 Layout
 
 ```

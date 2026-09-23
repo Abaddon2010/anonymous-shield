@@ -37,26 +37,7 @@ def tor_reachable_host(host: str) -> bool:
     return True
 
 
-def bridge_lines_from(text: str) -> list:
-    """Extrai linhas de bridge (obfs4/webtunnel/snowflake/Bridge) de um texto."""
-    import re as _re
-    out = []
-    for ln in (text or "").splitlines():
-        s = ln.strip()
-        if s and _re.match(r"(?i)^(obfs4|webtunnel|snowflake|bridge)\s+\S", s):
-            out.append(s)
-    return out
-
-
-def bridge_valid(line: str) -> bool:
-    """Uma bridge válida tem transporte + host:porta + fingerprint (40 hex)."""
-    import re as _re
-    s = (line or "").strip()
-    if s.lower().startswith("bridge "):
-        s = s[7:].strip()
-    return bool(_re.match(
-        r"(?i)^(obfs4|webtunnel|snowflake)\s+"
-        r"(\[[0-9a-f:]+\]|[\w.-]+):\d+\s+[0-9a-f]{40}\b", s))
+from .sysprotect import bridge_lines_from, bridge_valid
 
 
 def probe_host(host: str, port: int, via_tor: bool, socks_port: int) -> tuple[int, bool, str]:
@@ -312,13 +293,15 @@ class UiLogic:
         self.lbl_mode_title.setText(T("mode_title"))
         _cur = self._detect_preset()
         _names = {"rapido": "mode_fast", "anonimo": "mode_anon",
-                  "censura": "mode_censor", "custom": "mode_custom"}
+                  "censura": "mode_censor", "furtivo": "mode_stealth",
+                  "custom": "mode_custom"}
         for _m, _b in self.mode_btns.items():
             _b.setText(T(_names[_m]))
             _b.setChecked(_m == _cur)
         self.lbl_mode_cur.setText(f"{T('mode_cur')}: {T(_names[_cur])}")
         _desc = {"rapido": "mode_desc_fast", "anonimo": "mode_desc_anon",
-                 "censura": "mode_desc_censor", "custom": "mode_desc_custom"}[_cur]
+                 "censura": "mode_desc_censor", "furtivo": "mode_desc_stealth",
+                 "custom": "mode_desc_custom"}[_cur]
         self.lbl_mode_desc.setText(T(_desc))
         self.lbl_rotate_title.setText(T("rotate_title"))
         self.lbl_rotate_every.setText(T("rotate_every"))
@@ -389,6 +372,9 @@ class UiLogic:
 
     def _detect_preset(self) -> str:
         c = self.cfg
+        if (c.bridges_enabled and c.never_store_logs
+                and c.bridge_preset in ("obfs4", "auto")):
+            return "furtivo"
         if (c.bridges_enabled and c.bridge_preset not in ("direto", "auto")):
             return "censura"
         if (c.exit_mode == "fourteen" and c.auto_rotate and c.kill_switch
@@ -426,13 +412,36 @@ class UiLogic:
                 if c.bridge_preset == "direto":
                     c.bridge_preset = "obfs4"
                 self._push_log(self.tr("mode_need_bridges"))
+        elif mode == "furtivo":
+            # VPN + obfs4 + nunca-armazenar-logs contra a provedora.
+            c.bridges_enabled = True
+            if c.bridge_preset == "direto":
+                c.bridge_preset = "obfs4"
+            if not (c.bridges or []):
+                self._push_log(self.tr("mode_need_bridges"))
+            c.never_store_logs = True
+            vb = (c.vpn_bin or "").strip()
+            vc = (c.vpn_config or "").strip()
+            if (vb and vc and os.path.exists(vb) and os.path.exists(vc)
+                    and not self.vpn_on):
+                try:
+                    if hasattr(self, "edit_vpn_bin"):
+                        if not self.edit_vpn_bin.text().strip():
+                            self.edit_vpn_bin.setText(vb)
+                        if not self.edit_vpn_config.text().strip():
+                            self.edit_vpn_config.setText(vc)
+                    self._vpn_connect()
+                except (RuntimeError, AttributeError):
+                    self._push_log(self.tr("mode_need_vpn"))
+            elif not self.vpn_on:
+                self._push_log(self.tr("mode_need_vpn"))
         else:
             return
         c.save()
         _mn = {"rapido": "mode_fast", "anonimo": "mode_anon",
-               "censura": "mode_censor"}.get(mode, "mode_custom")
+               "censura": "mode_censor", "furtivo": "mode_stealth"}.get(mode, "mode_custom")
         self._push_log(self.tr("mode_applied", m=self.tr(_mn)))
-        if self.connected and self._worker and mode in ("rapido", "censura"):
+        if self.connected and self._worker and mode in ("rapido", "censura", "furtivo"):
             self.disconnect_tor(silent=True)
             self.connect_tor()
         elif self.connected and self._worker and mode == "anonimo":
@@ -565,6 +574,8 @@ class UiLogic:
         self.lbl_br_count.setText(T("br_count", n=len(self.cfg.bridges)))
         self.lbl_br_tip.setText(T("br_tip"))
         self.btn_br_open.setText(T("br_open"))
+        self.btn_br_mail.setText(T("br_mail"))
+        self.btn_br_tg.setText(T("br_tg"))
         self.lbl_br_captcha.setText(T("br_captcha"))
         self.lbl_br_web.setText(T("br_webtunnel"))
         self.lbl_br_web.setVisible(self.cfg.bridge_preset in ("snowflake", "webtunnel"))
@@ -850,6 +861,12 @@ class UiLogic:
         self.lbl_net_desc.setText(T("diag_net_desc"))
         self.btn_net.setText(T("diag_net_btn"))
         self.btn_e2e.setText(T("e2e_btn"))
+        try:
+            _titles = {"dns": T("net_dns"), "tcp": T("net_tcp"), "http": T("net_http")}
+            for _cid, (_t, _v, _s) in self.net_cards.items():
+                _t.setText(_titles[_cid])
+        except (RuntimeError, AttributeError):
+            pass
         self.lbl_wipe_title.setText(T("diag_wipe"))
         self.lbl_wipe_desc.setText(T("diag_wipe_desc"))
         self.btn_wipe.setText(T("diag_wipe_btn"))
@@ -916,6 +933,8 @@ class UiLogic:
         self.gh_box.setVisible(src == "gh")
         self.url_box.setVisible(src == "url")
         self.lbl_upd_repo.setText(T("upd_repo"))
+        self.edit_repo.setText(self.cfg.update_repo or "")
+        self.edit_repo.setToolTip(T("upd_repo_tip"))
         self.btn_upd_check.setText(T("upd_check"))
         self.lbl_upd_url.setText(T("upd_url"))
         self.edit_upd_url.setPlaceholderText(T("upd_url_hint"))
@@ -1707,6 +1726,16 @@ class UiLogic:
             return
         if len(valid) != len(lines):
             self._push_log(self.tr("log_br_invalid", n=len(lines) - len(valid)))
+        if self.cfg.bridge_preset in ("snowflake", "webtunnel"):
+            try:
+                from .torctl import TorWorker as _TW
+                _w = self._worker or _TW(self.cfg)
+                has_pt = bool(_w._pt_line())
+            except Exception:
+                has_pt = False
+            if not has_pt:
+                self._push_log(self.tr("log_br_no_pt", p=self.cfg.bridge_preset))
+                return
         self.cfg.bridges = valid
         if not self.cfg.bridges_enabled:
             self.cfg.bridges_enabled = True
@@ -2233,14 +2262,51 @@ cert_refresh_delay = 240
 
     def _test_net(self) -> None:
         self.lbl_result.setText(self.tr("testing_net"))
+        try:
+            for _t, _v, _s in self.net_cards.values():
+                _v.setText("…")
+                _s.setText("")
+                _v.setStyleSheet("font-size: 15px;")
+        except (RuntimeError, AttributeError):
+            pass
 
         def job() -> None:
             try:
-                res = sysprotect.test_direct_net()
+                d = sysprotect.test_direct_net_full()
             except Exception as e:  # noqa: BLE001
-                res = f"✗ {e}"[:300]
-            self._on_ui(lambda: self.lbl_result.setText(res))
+                d = {"text": f"✗ {e}"[:300]}
+            self._on_ui(lambda: self._paint_net(d))
         threading.Thread(target=job, daemon=True).start()
+
+    def _paint_net(self, d: dict) -> None:
+        """Pinta os 3 cards (DNS/TCP/HTTP) + texto técnico abaixo."""
+        try:
+            T = self.tr
+            titles = {"dns": T("net_dns"), "tcp": T("net_tcp"), "http": T("net_http")}
+            vals = {
+                "dns": (d.get("dns_ok", False), d.get("dns_ip", "") or "",
+                        d.get("dns_ms")),
+                "tcp": (d.get("tcp_ok", False), "443",
+                        d.get("tcp_ms")),
+                "http": (d.get("http_ok", False),
+                         f"HTTP {d.get('http_code', '')}".strip(),
+                         d.get("http_ms")),
+            }
+            for cid, (_t, _v, _s) in self.net_cards.items():
+                ok, sub, ms = vals[cid]
+                _t.setText(titles[cid])
+                _v.setText(T("net_ok") if ok else T("net_fail"))
+                _v.setStyleSheet("font-size: 15px; font-weight: 800; color: %s;"
+                                 % ("#10b981" if ok else "#ef4444"))
+                tail = []
+                if sub:
+                    tail.append(str(sub))
+                if isinstance(ms, (int, float)):
+                    tail.append(f"{ms:.0f} ms")
+                _s.setText(" · ".join(tail))
+            self.lbl_result.setText(d.get("text", ""))
+        except (RuntimeError, AttributeError):
+            pass
 
     def _wipe(self) -> None:
         self.lbl_result.setText(self.tr("wiping"))
@@ -2320,8 +2386,20 @@ cert_refresh_delay = 240
 
     def _upd_check(self) -> None:
         import re as _re
+        from .config import UPDATE_REPO_OFFICIAL as _OFF
         repo = _re.sub(r"[^A-Za-z0-9_.\-/]", "", self.edit_repo.text().strip()
                        or self.cfg.update_repo.strip())
+        if repo.lower() != _OFF.lower():
+            # Campo travado: qualquer divergência (edição manual do config)
+            # volta sozinha p/ o oficial, com aviso.
+            self.cfg.update_repo = _OFF
+            self.cfg.save()
+            try:
+                self.edit_repo.setText(_OFF)
+            except (RuntimeError, AttributeError):
+                pass
+            self._push_log(self.tr("upd_repo_locked"))
+        repo = _OFF
         old = self.cfg.update_repo.strip()
         if old and repo.lower() != old.lower():
             # Repositório trocado: confirmação explícita (anti-redirecionamento).
@@ -2408,6 +2486,11 @@ cert_refresh_delay = 240
 
     def _upd_dl(self, name: str, url: str) -> None:
         import requests
+        if os.name != "nt" and not (getattr(self, "_upd_sums", {}) or {}).get(os.path.basename(name), ""):
+            # Linux não tem Authenticode: sem checksum publicado, nem baixa.
+            self.lbl_upd_status.setText(self.tr("upd_sha_required"))
+            self._push_log(self.tr("upd_sha_required"))
+            return
         threading.Thread(target=self._upd_dl_job, args=(name, url, None), daemon=True).start()
 
     def _upd_apply(self, name: str) -> None:

@@ -654,25 +654,102 @@ def ovpn_shred_auth() -> None:
         pass
 
 
+def _ovpn_free_port() -> int:
+    import socket as _s
+    s = _s.socket(_s.AF_INET, _s.SOCK_STREAM)
+    try:
+        s.bind(("127.0.0.1", 0))
+        return int(s.getsockname()[1])
+    finally:
+        try:
+            s.close()
+        except OSError:
+            pass
+
+
+def _ovpn_mgmt_handshake(sock, user: str, password: str, timeout: float = 30.0) -> None:
+    """Responde username/password via management (sem arquivo em disco).
+
+    Protocolo: espera `PASSWORD:Need 'Auth'`, envia credenciais, libera hold.
+    Levanta RuntimeError em falha/timeout.
+    """
+    import socket as _sk
+    import time as _t
+    sock.settimeout(2.0)
+    rfile = sock.makefile("rwb", buffering=0)
+    try:
+        deadline = _t.monotonic() + timeout
+        sent_auth = False
+        while _t.monotonic() < deadline:
+            try:
+                raw = rfile.readline(4096)
+            except (_sk.timeout, OSError) as e:
+                raise RuntimeError(f"mgmt timeout: {e}")
+            if not raw:
+                raise RuntimeError("mgmt fechou a conexão")
+            low = raw.decode("utf-8", "replace").strip()
+            if not sent_auth and "PASSWORD:Need 'Auth'" in low:
+                rfile.write(f'username "Auth" "{user}"\n'.encode("utf-8", "replace"))
+                rfile.write(f'password "Auth" "{password}"\n'.encode("utf-8", "replace"))
+                rfile.flush()
+                sent_auth = True
+            if "HOLD:Waiting for hold release" in low:
+                if sent_auth or not user:
+                    rfile.write(b"hold release\n")
+                    rfile.flush()
+                    return
+            if "PASSWORD:Verification Failed" in low:
+                raise RuntimeError("VPN: usuário/senha rejeitados")
+            if "SUCCESS: hold release succeeded" in low:
+                return
+        raise RuntimeError("mgmt: handshake incompleto (timeout)")
+    finally:
+        try:
+            rfile.close()
+        except OSError:
+            pass
+
+
+def _ovpn_mgmt_thread(port: int, user: str, password: str) -> None:
+    import socket as _sk
+    import time as _t
+    deadline = _t.monotonic() + 60.0
+    while _t.monotonic() < deadline:
+        try:
+            s = _sk.create_connection(("127.0.0.1", port), timeout=3)
+            break
+        except OSError:
+            _t.sleep(0.5)
+    else:
+        return
+    try:
+        _ovpn_mgmt_handshake(s, user, password)
+    except Exception:
+        try:
+            s.close()
+        except OSError:
+            pass
+
+
 def ovpn_start(exe: str, config: str, user: str, password: str):
     """Inicia openvpn --config (exige admin p/ TAP/rotas). Retorna Popen.
 
-    Credenciais vão ao ovpn-auth.txt com ACL restrita e devem ser
-    trituradas via ovpn_shred_auth() após a leitura (uilogic agenda).
+    Credenciais NUNCA tocam o disco: vão via management interface
+    (127.0.0.1, porta efêmera) em thread dedicada. Sem user, sem auth.
     """
     import subprocess as _sp
+    import threading as _th
     args = [exe, "--config", config]
     if user:
-        authf = ovpn_auth_path()
-        with open(authf, "w", encoding="utf-8") as f:
-            f.write(user + "\n" + password + "\n")
-        lock_private(authf)
-        try:
-            if os.name != "nt":
-                os.chmod(authf, 0o600)
-        except OSError:
-            pass
-        args += ["--auth-user-pass", authf]
+        port = _ovpn_free_port()
+        args += ["--management", "127.0.0.1", str(port),
+                 "--management-query-passwords", "--management-hold",
+                 "--auth-nocache", "--log", ovpn_log_path(), "--verb", "3"]
+        proc = _sp.Popen(args, stdout=_sp.DEVNULL, stderr=_sp.STDOUT,
+                         creationflags=getattr(_sp, "CREATE_NO_WINDOW", 0))
+        _th.Thread(target=_ovpn_mgmt_thread,
+                   args=(port, user, password or ""), daemon=True).start()
+        return proc
     args += ["--log", ovpn_log_path(), "--verb", "3"]
     return _sp.Popen(args, stdout=_sp.DEVNULL, stderr=_sp.STDOUT,
                      creationflags=getattr(_sp, "CREATE_NO_WINDOW", 0))
@@ -691,6 +768,28 @@ def _env_path(var: str, rest: str) -> str | None:
 
 
 _PORTABLE_VARS = ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA", "APPDATA")
+
+
+def bridge_lines_from(text: str) -> list:
+    """Extrai linhas de bridge (obfs4/webtunnel/snowflake/Bridge) de um texto."""
+    import re as _re
+    out = []
+    for ln in (text or "").splitlines():
+        s = ln.strip()
+        if s and _re.match(r"(?i)^(obfs4|webtunnel|snowflake|bridge)\s+\S", s):
+            out.append(s)
+    return out
+
+
+def bridge_valid(line: str) -> bool:
+    """Uma bridge válida tem transporte + host:porta + fingerprint (40 hex)."""
+    import re as _re
+    s = (line or "").strip()
+    if s.lower().startswith("bridge "):
+        s = s[7:].strip()
+    return bool(_re.match(
+        r"(?i)^(obfs4|webtunnel|snowflake)\s+"
+        r"(\[[0-9a-f:]+\]|[\w.-]+):\d+\s+[0-9a-f]{40}\b", s))
 
 
 def portable(path: str) -> str:
@@ -875,23 +974,36 @@ def dns_via_stub(host: str, port: int, timeout: float = 6.0) -> list[str]:
 
 # ---------------- testes de rede ----------------
 
-def test_direct_net() -> str:
-    """DNS + TCP 443 + HTTP sem Tor. Linhas técnicas universais (✓/✗)."""
+def test_direct_net_full() -> dict:
+    """DNS + TCP 443 + HTTP sem Tor. Retorna dict c/ ok/latências + texto.
+
+    {"dns_ok","dns_ip","dns_ms","tcp_ok","tcp_ms","http_ok","http_code",
+     "http_ms","text"} — ms em float ou None.
+    """
+    import time as _t
+    d: dict = {"dns_ok": False, "dns_ip": "", "dns_ms": None,
+               "tcp_ok": False, "tcp_ms": None,
+               "http_ok": False, "http_code": "", "http_ms": None}
     out = []
     try:
+        t0 = _t.monotonic()
         infos = socket.getaddrinfo("check.torproject.org", 443, type=socket.SOCK_STREAM)
         addr = infos[0][4][0]
+        d.update(dns_ok=True, dns_ip=addr, dns_ms=( _t.monotonic() - t0) * 1000.0)
         out.append(f"✓ DNS → {addr}")
     except OSError as e:
         out.append(f"✗ DNS falhou: {e}")
         addr = "check.torproject.org"
     try:
+        t0 = _t.monotonic()
         s = socket.create_connection((addr, 443), timeout=10)
         s.close()
+        d.update(tcp_ok=True, tcp_ms=(_t.monotonic() - t0) * 1000.0)
         out.append(f"✓ TCP 443 OK ({addr})")
     except OSError as e:
         out.append(f"✗ TCP 443 falhou: {e}")
     try:
+        t0 = _t.monotonic()
         s = socket.create_connection(("check.torproject.org", 80), timeout=10)
         s.sendall(b"GET /api/ip HTTP/1.1\r\nHost: check.torproject.org\r\nConnection: close\r\n\r\n")
         data = b""
@@ -903,10 +1015,20 @@ def test_direct_net() -> str:
             data += chunk
         s.close()
         head = data.decode("utf-8", "replace")[:300]
+        import re as _re
+        m = _re.search(r"HTTP/1\.[01]\s+(\d+)", head)
+        d.update(http_ok=True, http_code=m.group(1) if m else "?",
+                 http_ms=(_t.monotonic() - t0) * 1000.0)
         out.append(f"✓ HTTP OK:\n{head}")
     except OSError as e:
         out.append(f"✗ HTTP falhou: {e}")
-    return "\n".join(out)
+    d["text"] = "\n".join(out)
+    return d
+
+
+def test_direct_net() -> str:
+    """DNS + TCP 443 + HTTP sem Tor. Linhas técnicas universais (✓/✗)."""
+    return test_direct_net_full()["text"]
 
 
 def tor_data_size_mb(path: str) -> float:

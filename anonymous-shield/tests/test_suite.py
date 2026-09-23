@@ -175,3 +175,106 @@ def test_ui_francês():
         w._goto(pid)
     app.processEvents()
     assert "Tableau" in w.side_btns["dashboard"].text()
+
+
+def test_i18n_chaves_novas():
+    from anonshield.i18n import t
+    keys = ["tab_about", "about_sub", "about_licenses", "about_gpl",
+            "log_never", "log_never_hint", "log_never_ask",
+            "log_br_none", "log_br_invalid", "log_br_tor_off", "log_br_no_pt",
+            "upd_sha_required", "mode_stealth", "mode_desc_stealth",
+            "mode_need_vpn", "route_bridges",
+            "tip_dashboard", "tip_home", "tip_total", "tip_apps",
+            "tip_bridges", "tip_proxy", "tip_dns", "tip_vpn", "tip_scan",
+            "tip_logs", "tip_diag", "tip_update", "tip_about",
+            "net_dns", "net_tcp", "net_http", "net_ok", "net_fail",
+            "upd_repo_locked", "upd_repo_tip",
+            "mode_stealth", "mode_desc_stealth", "mode_need_vpn",
+            "br_mail", "br_tg"]
+    for lang in ("pt-BR", "en", "es"):
+        for k in keys:
+            v = t(lang, k)
+            assert v and v != k, (lang, k)
+
+
+def test_net_full_structured():
+    import os as _os
+    import pytest as _pt
+    if _os.environ.get("ANONSHIELD_NET") != "1":
+        _pt.skip("rede direta só com ANONSHIELD_NET=1")
+    from anonshield.sysprotect import test_direct_net_full
+    d = test_direct_net_full()
+    assert set(d) >= {"dns_ok", "tcp_ok", "http_ok", "text"}
+    assert isinstance(d["text"], str) and d["text"]
+
+
+def test_torrc_rejeita_bridge_invalida(tmp_path):
+    set_data_dir(str(tmp_path))
+    from anonshield.config import AppConfig as _AC
+    from anonshield.torctl import TorWorker
+    cfg = _AC()
+    cfg.bridges_enabled = True
+    cfg.bridges = ["obfs4 1.2.3.4:443 " + "B" * 40,
+                   "obfs4 1.2.3.4:443 incompleta",
+                   "lixo total"]
+    torrc, _ = TorWorker(cfg).write_torrc()
+    txt = open(torrc, encoding="utf-8").read()
+    assert "UseBridges 1" in txt and "B" * 40 in txt
+    assert "incompleta" not in txt and "lixo total" not in txt
+
+
+def test_tor_pin_sha256(tmp_path):
+    set_data_dir(str(tmp_path))
+    from anonshield.config import AppConfig as _AC
+    from anonshield import torctl as _tc
+    from anonshield.torctl import TorWorker
+    w = TorWorker(_AC())
+    exe = _tc.tor_bin()
+    assert os.path.exists(exe)
+    assert w._verify_bundled_tor(exe) is True
+    f1 = os.path.join(str(tmp_path), "a.bin")
+    f2 = os.path.join(str(tmp_path), "b.bin")
+    open(f1, "wb").write(b"conteudo-igual")
+    open(f2, "wb").write(b"conteudo-igual")
+    open(os.path.join(str(tmp_path), "c.bin"), "wb").write(b"adulterado!")
+    import hashlib
+    h = hashlib.sha256(b"conteudo-igual").hexdigest()
+    assert _tc._tor_file_matches(f1, h) is True
+    assert _tc._tor_file_matches(f2, h.upper()) is True
+    assert _tc._tor_file_matches(os.path.join(str(tmp_path), "c.bin"), h) is False
+    assert _tc._tor_file_matches(os.path.join(str(tmp_path), "nope.bin"), h) is False
+
+
+def test_ovpn_mgmt_handshake():
+    import socket
+    from anonshield.sysprotect import _ovpn_mgmt_handshake
+    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    srv.bind(("127.0.0.1", 0))
+    srv.listen(1)
+    port = srv.getsockname()[1]
+    script = []
+
+    def fake_server():
+        c, _ = srv.accept()
+        f = c.makefile("rwb", buffering=0)
+        f.write(b">INFO:fake\n>PASSWORD:Need 'Auth' username/password\n")
+        got = [f.readline(256) for _ in range(2)]
+        script.extend(got)
+        f.write(b">HOLD:Waiting for hold release\n")
+        got2 = f.readline(256)
+        script.append(got2)
+        f.write(b"SUCCESS: hold release succeeded\n")
+        f.close()
+        c.close()
+        srv.close()
+
+    import threading
+    t = threading.Thread(target=fake_server, daemon=True)
+    t.start()
+    s = socket.create_connection(("127.0.0.1", port), timeout=5)
+    _ovpn_mgmt_handshake(s, "userx", "s3nh4")
+    s.close()
+    t.join(timeout=10)
+    blob = b"".join(script)
+    assert b'username "Auth" "userx"' in blob and b'password "Auth" "s3nh4"' in blob
+    assert blob.strip().endswith(b"hold release")

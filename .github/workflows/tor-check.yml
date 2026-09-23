@@ -1,0 +1,27 @@
+name: Tor currency check (monthly)
+
+# Política: Tor embutido deve acompanhar o stable oficial.
+# Compara https://www.torproject.org/download/tor/ com vendor/TOR_VERSION.
+# Falha = aviso para verificação manual (não quebra o build).
+on:
+  schedule:
+    - cron: "0 9 1 * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare bundled Tor vs official stable
+        shell: pwsh
+        run: |
+          $pinned = (Get-Content anonymous-shield/vendor/TOR_VERSION).Trim()
+          $page = Invoke-WebRequest -Uri "https://www.torproject.org/download/tor/" -TimeoutSec 60
+          $m = [regex]::Match($page.Content, "tor (\d+\.\d+\.\d+)")
+          if (-not $m.Success) { throw "nao foi possivel ler a versao oficial (checar manualmente)" }
+          $stable = $m.Groups[1].Value
+          "bundled=$pinned official=$stable"
+          if ($pinned -ne $stable) {
+            throw "Tor desatualizado: embutido $pinned, oficial $stable. Atualizar vendor/ + TOR_VERSION (ver README, secao Tor refresh policy)."
+          }

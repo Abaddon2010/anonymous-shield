@@ -75,6 +75,16 @@ def eyes_exclude(mode: str) -> str:
     return ",".join(EYES_MAP.get(mode, ()))
 
 
+def _tor_file_matches(exe: str, expect_hex: str) -> bool:
+    """Compara SHA-256 de um arquivo com o esperado (False em qualquer erro)."""
+    try:
+        import hashlib as _hl
+        with open(exe, "rb") as f:
+            return _hl.sha256(f.read()).hexdigest() == (expect_hex or "").lower()
+    except OSError:
+        return False
+
+
 class TorWorker(QObject):
     progress = pyqtSignal(float, str, str)      # frac, tag, summary
     connected = pyqtSignal()
@@ -187,7 +197,8 @@ class TorWorker(QObject):
             lines.append(f"ExcludeExitNodes {{{excl}}}")
             lines.append("StrictNodes 1")
         if self.cfg.bridges_enabled and self.cfg.bridges:
-            lines.append("UseBridges 1")
+            from .sysprotect import bridge_valid as _bv
+            _blines = []
             for b in self.cfg.bridges:
                 # Anti-injeção: 1 bridge = 1 linha (corta CR/LF/controles).
                 b = str(b).split("\n")[0].split("\r")[0].strip()
@@ -197,7 +208,15 @@ class TorWorker(QObject):
                     continue
                 if not b.lower().startswith("bridge "):
                     b = "Bridge " + b
-                lines.append(b)
+                try:
+                    if not _bv(b):
+                        continue  # defesa em profundidade: UI valida, torrc filtra
+                except Exception:
+                    continue
+                _blines.append(b)
+            if _blines:
+                lines.append("UseBridges 1")
+                lines.extend(_blines)
             pt = self._pt_line()
             if pt:
                 lines.append(pt)
@@ -329,7 +348,9 @@ class TorWorker(QObject):
     def run_connect(self) -> None:
         exe = tor_bin()
         if not os.path.exists(exe):
-            self.failed.emit(self.tr("tor_fail").replace("{e}", f"tor.exe missing: {exe}"))
+            self.failed.emit(self.tr("tor_fail").replace("{e}", f"tor missing: {exe}"))
+            return
+        if not self._verify_bundled_tor(exe):
             return
         try:
             torrc, _ = self.write_torrc()
@@ -565,6 +586,32 @@ class TorWorker(QObject):
             self.test_result.emit(target, r.text[:2000])
         except Exception as e:
             self.test_result.emit(target, f"Erro: {e}"[:500])
+
+    def _verify_bundled_tor(self, exe: str) -> bool:
+        """Confere SHA-256 do tor embutido (só bundle; tor do sistema pula).
+
+        Retorna True se OK ou não-aplicável; False + falha emitida se divergir.
+        """
+        try:
+            if os.name == "nt":
+                vend = os.path.join(base_dir(), "vendor") + os.sep
+                if not os.path.abspath(exe).startswith(os.path.abspath(vend)):
+                    return True
+            else:
+                return True  # Linux: tor do distro, fora do nosso pin
+            pinf = os.path.join(base_dir(), "vendor", "TOR_SHA256")
+            with open(pinf, encoding="utf-8") as f:
+                expect = (f.read().strip().split() or [""])[0].lower()
+            if not expect:
+                return True
+            if _tor_file_matches(exe, expect):
+                return True
+            self.failed.emit(self.tr("tor_fail").replace(
+                "{e}", "tor.exe diverge do SHA-256 publicado (reinstale)"))
+            return False
+        except OSError as e:
+            self.failed.emit(self.tr("tor_fail").replace("{e}", str(e)))
+            return False
 
     def _drain_stdout(self) -> None:
         """Lê o stdout do tor p/ buffer em RAM (modo never_store_logs)."""

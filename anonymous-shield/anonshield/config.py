@@ -12,6 +12,9 @@ from dataclasses import asdict, dataclass, field
 
 from . import vault as _vault
 
+# Repositório oficial de updates (campo travado na UI; diverge → volta sozinho).
+UPDATE_REPO_OFFICIAL = "Abaddon2010/anonymous-shield"
+
 # Override da pasta de dados (usuário local logado). None = padrão do SO.
 _DATA_OVERRIDE: str | None = None
 
@@ -143,7 +146,7 @@ class AppConfig:
     prev_proxy: SysProxy | None = None
     firewall_on: bool = False
     apps: list = field(default_factory=list)
-    update_repo: str = ""
+    update_repo: str = UPDATE_REPO_OFFICIAL
     # Logs: nunca gravar em disco (só memória volátil). Opt-in.
     never_store_logs: bool = False
     # Saídas Tor: "all" | "five" | "nine" | "fourteen" (fora dos Olhos).
