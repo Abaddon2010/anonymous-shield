@@ -14,6 +14,23 @@ Go to [**Releases**](../../releases) and grab `AnonymousShield.exe` from the
 version you want (automatically built by GitHub Actions on every `v*` tag).
 No Python install needed: PyQt6, Tor and transports ship embedded.
 
+## 🎭 How it works
+
+```mermaid
+flowchart LR
+    YOU[🧑 You + your apps] --> APP[🧅 Anonymous Shield]
+    APP -->|direct or<br/>🌉 bridges<br/>obfs4 · snowflake · webtunnel| TOR{{Tor network<br/>guard → middle → exit}}
+    TOR --> NET[🌍 Internet<br/>sees only the exit IP]
+    APP -.->|🛡 kill-switch| FW[🧱 Firewall<br/>blocks everything<br/>outside Tor]
+    APP -.->|🔌 SOCKS 127.0.0.1| BROWSERS[🌐 Browser / apps<br/>via Tor]
+```
+
+1. You click **Connect** 🧅 — Tor bootstraps to 100%.
+2. Traffic detours through 3 relays; sites see only the **exit IP**.
+3. Censored network? Pick a **bridge** 🌉 to disguise Tor traffic.
+4. **Kill-switch** 🧱 cuts anything trying to bypass Tor.
+5. One click to disconnect — proxy + firewall restored automatically.
+
 ## 📁 Layout
 
 ```
