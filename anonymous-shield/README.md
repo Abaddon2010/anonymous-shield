@@ -1,57 +1,75 @@
-# 🛡️ Anonymous Shield v1.0.0 — Orbot para Desktop (Python)
+# 🛡️ Anonymous Shield — Tor desktop client (Python)
 
-Cliente **Tor** multi-sistema em **Python + PyQt6 + tor oficial** (daemon C
-via `stem`), inspirado no **Orbot**. Sucessor do Anonymous Shield Rust/Arti:
-o motor C conecta como o Tor Browser (provado: bootstrap 100% + `IsTor:true`).
+**Tor** client for Windows (and beta Linux) built with **Python + PyQt6 +
+official tor** (C daemon via `stem`), inspired by Orbot. Proven path: 100%
+bootstrap + `IsTor:true` on the same machine/network.
 
-## Por que Python desta vez
+> **Tor™** is a trademark of The Tor Project, Inc. — this product is **not**
+> affiliated with or endorsed by them. https://www.torproject.org/
 
-- Usa o **mesmo daemon Tor do Tor Browser** (`tor.exe` 0.4.9, Expert Bundle
-  15.0.23 incluso em `vendor/`) — consenso rápido, guards testados.
-- `stem` fala com a ControlPort (bootstrap ao vivo, `NEWNYM`, etc.).
-- SOCKS nativo do tor (sem reimplementar), `lyrebird` incluso p/ **obfs4**.
+## Features
 
-## Funcionalidades (paridade com o Rust)
+- 🧅 Onion button + real progress (`bootstrap-phase`), exit IP + country,
+  new identity, live circuit (guard→middle→exit) and bandwidth
+- 🌉 Bridges: direct/auto/obfs4/snowflake/webtunnel/custom, clipboard
+  auto-fill, auto-enable; bundled lyrebird for obfs4
+- ⇄ Upstream (`Socks5Proxy`/`Socks4Proxy`/`HTTPSProxy` in torrc, password
+  via control port only — never on disk)
+- 🔌 Local SOCKS served by tor (`SocksPort`) + dedicated SOCKS per app
+- 🛡 Optional DNSCrypt (tor / local stub / combined)
+- 🛡 Total protection: system proxy + firewall kill-switch (admin) + per-app
+- 🖥 Logs (real `tor.log` + events, optional never-store-logs mode),
+  ⟡ Diagnostics (Tor/network tests, leak check, wipe, rescue),
+  ⟳ Update (GitHub API + SHA-256 + restart), ⓘ About (full license texts)
+- ⏰ Scheduler + IP auto-rotation, profile backup (ZIP), local users with
+  AES-256-GCM vault, ☰ draggable sidebar, light/dark theme, **50 languages**
+  (PT-BR/EN/ES complete, rest via EN fallback), single instance
 
-- 🧅 Botão-cebola + progresso real (`bootstrap-phase`), IP de saída + país
-- 🌉 Bridges: Direto/auto/obfs4/snowflake/webtunnel/custom, botão Colar,
-  auto-ativa, aviso de PT ausente; obfs4 via lyrebird embutido
-- ⇄ Upstream (`Socks5Proxy`/`Socks4Proxy`/`HTTPSProxy` no torrc)
-- 🔌 SOCKS local servido pelo tor (`SocksPort`)
-- 🛡 DNSCrypt opcional (tor / stub `dnscrypt-proxy` + teste sem deps)
-- 🛡 Proteção Total: proxy do Windows + kill-switch firewall (admin) + por app
-- 🖥 Logs (log real do `tor.log` + eventos), ⟡ Diagnóstico (teste Tor/rede/
-  wipe), ⟳ Atualizar (GitHub API + download)
-- ☰ Menu lateral, tema claro/escuro, **PT-BR/EN/ES**, instância única,
-  firewall auto (admin), kill-switch restaurado ao sair
-
-## Rodar do fonte
+## Run from source
 
 ```bash
 pip install -r requirements.txt
 python main.py
 ```
 
-## Gerar o executável
+## Build the executable (Windows)
 
 ```bash
-pyinstaller --noconfirm --onefile --windowed --name AnonymousShield \
-  --icon assets/icon.ico --add-data "vendor;vendor" --add-data "assets;assets" \
-  main.py
-# dist/AnonymousShield.exe  (~100 MB: Qt + tor + PTs embutidos)
+python -m PyInstaller --noconfirm AnonymousShield.spec
+# dist/AnonymousShield.exe  (~90 MB: Qt + tor + PTs embedded)
 ```
+
+## 🐧 Linux (Debian/Ubuntu — beta)
+
+```bash
+sudo apt install -y tor obfs4proxy python3-pyqt6 python3-pip python3-venv
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python3 main.py
+```
+
+Uses the **system Tor** — no embedded binary on Linux. Firewall kill-switch
+and system proxy on Linux are under construction (see root README).
 
 ## Layout
 
 ```
-tor-shield-py/
-  main.py  requirements.txt  README.md  CHANGELOG.md
-  anonshield/  config.py  i18n.py  torctl.py  sysprotect.py  gui.py  uilogic.py
+anonymous-shield/
+  main.py  requirements.txt  README.md  CHANGELOG.md  installer.iss
+  anonshield/  config.py  i18n*.py  torctl.py  sysprotect.py
+               gui.py  uilogic.py  users.py  vault.py  widgets.py
   assets/  icon.png  icon.ico
-  vendor/  tor/tor.exe  tor/pluggable_transports/lyrebird.exe  data/geoip*
+  vendor/  tor/tor.exe  tor/pluggable_transports/  data/geoip*  docs/
+  tests/
 ```
 
-## Privacidade
+## Privacy
 
-Zero nomes, caminhos pessoais ou dados da máquina no fonte (tudo via
-env/API do SO). Exemplos com `192.0.2.x` / `127.0.0.1`.
+Zero names, personal paths or machine data in the source (everything via
+OS env/API). Examples use `192.0.2.x` / `127.0.0.1`.
+
+## License
+
+Own code dual-licensed **Apache-2.0 / GPL-3.0** (`LICENSE-APACHE`, `LICENSE`
+at repo root). Bundles Tor (BSD-3-clause), OpenSSL (Apache-2.0), libevent,
+zlib — full texts in `vendor/docs/` and on the app's About page.
