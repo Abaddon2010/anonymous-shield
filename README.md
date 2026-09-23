@@ -32,6 +32,19 @@ python main.py            # rodar
 python -m PyInstaller --noconfirm AnonymousShield.spec   # gerar o exe
 ```
 
+## ⚠️ Aviso legal (disclaimer)
+
+- Este software é fornecido **"como está" (as is), sem garantias** de qualquer
+  tipo. Os autores **não se responsabilizam** por danos, perda de dados,
+  vazamento de identidade ou mau uso.
+- **Nenhuma ferramenta garante anonimato absoluto.** A proteção real depende
+  também do seu comportamento (logins, torrents, plugins, WebRTC, etc.).
+  Estude opsec antes de confiar sua segurança a qualquer software.
+- Projeto **independente, sem afiliação ou endosso** do The Tor Project.
+  **Tor™** é marca do The Tor Project, Inc. — https://www.torproject.org/
+- Use em conformidade com as **leis do seu país**. Atividades ilícitas
+  continuam ilícitas atrás de qualquer ferramenta.
+
 ## 📄 Licença
 
 Código próprio em **licença dupla Apache-2.0 / GPL-3.0** (ver `LICENSE-APACHE`
