@@ -31,6 +31,15 @@ flowchart LR
 4. **Kill-switch** 🧱 cuts anything trying to bypass Tor.
 5. One click to disconnect — proxy + firewall restored automatically.
 
+## 🧪 Experimental — help wanted
+
+- **VPN (Tor-over-VPN / OpenVPN próprio):** ⚠️ recurso ainda **não validado**
+  em campo — se testar, [abra uma issue](../../issues) contando o resultado
+  (provedor, modo, funcionou ou não). Testadores são bem-vindos!
+- Gostou do projeto e quer ver esse e outros recursos evoluindo?
+  ☕ **[Compre-me um café](https://www.buymeacoffee.com/SEU-USUARIO)** — qualquer
+  valor ajuda a pagar tempo de desenvolvimento e testes.
+
 ## 📁 Layout
 
 ```
