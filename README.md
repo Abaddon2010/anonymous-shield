@@ -1,53 +1,53 @@
-# 🛡️ Anonymous Shield — cliente Tor para desktop (Windows)
+# 🛡️ Anonymous Shield — Tor client for desktop (Windows)
 
-Cliente **Tor** para Windows em **Python + PyQt6 + tor oficial**, inspirado no Orbot:
-botão-cebola com progresso real de bootstrap, IP/país de saída, bridges
-(obfs4/snowflake/webtunnel), proxy upstream, SOCKS local, DNSCrypt, proteção
-total (proxy do Windows + kill-switch no firewall) e atualização pela aba Atualizar.
+**Tor** client for Windows built with **Python + PyQt6 + official tor**,
+inspired by Orbot: onion button with real bootstrap progress, exit IP/country,
+bridges (obfs4/snowflake/webtunnel), upstream proxy, local SOCKS, DNSCrypt,
+total protection (Windows proxy + firewall kill-switch), and in-app updates.
 
-> **Tor™** é marca do The Tor Project, Inc. — este produto **não** é afiliado
-> nem endossado por eles. Site oficial: https://www.torproject.org/
+> **Tor™** is a trademark of The Tor Project, Inc. — this product is **not**
+> affiliated with or endorsed by them. Official site: https://www.torproject.org/
 
-## 📥 Baixar
+## 📥 Download
 
-Vá em [**Releases**](../../releases) e baixe o `AnonymousShield.exe` da versão
-desejada (compilado automaticamente por GitHub Actions a cada tag `v*`).
-Não precisa instalar Python: PyQt6, Tor e transportes já vão embutidos.
+Go to [**Releases**](../../releases) and grab `AnonymousShield.exe` from the
+version you want (automatically built by GitHub Actions on every `v*` tag).
+No Python install needed: PyQt6, Tor and transports ship embedded.
 
-## 📁 Estrutura
+## 📁 Layout
 
 ```
 anonymous-shield/   app (main.py, anonshield/, assets/, vendor/, tests/)
-  vendor/           tor.exe oficial + lyrebird/conjure + GeoIP + licenças
-.github/workflows/ build do exe + Release automática
-LICENSE / LICENSE-APACHE   licença dupla do código: Apache-2.0 OU GPL-3.0
+  vendor/           official tor.exe + lyrebird/conjure + GeoIP + licenses
+.github/workflows/ exe build + automatic Release
+LICENSE / LICENSE-APACHE   dual-licensed code: Apache-2.0 OR GPL-3.0
 ```
 
-## 🔨 Rodar do fonte / compilar
+## 🔨 Run from source / build
 
 ```bash
 cd anonymous-shield
 pip install -r requirements.txt
-python main.py            # rodar
-python -m PyInstaller --noconfirm AnonymousShield.spec   # gerar o exe
+python main.py            # run
+python -m PyInstaller --noconfirm AnonymousShield.spec   # build the exe
 ```
 
-## ⚠️ Aviso legal (disclaimer)
+## ⚠️ Legal disclaimer
 
-- Este software é fornecido **"como está" (as is), sem garantias** de qualquer
-  tipo. Os autores **não se responsabilizam** por danos, perda de dados,
-  vazamento de identidade ou mau uso.
-- **Nenhuma ferramenta garante anonimato absoluto.** A proteção real depende
-  também do seu comportamento (logins, torrents, plugins, WebRTC, etc.).
-  Estude opsec antes de confiar sua segurança a qualquer software.
-- Projeto **independente, sem afiliação ou endosso** do The Tor Project.
-  **Tor™** é marca do The Tor Project, Inc. — https://www.torproject.org/
-- Use em conformidade com as **leis do seu país**. Atividades ilícitas
-  continuam ilícitas atrás de qualquer ferramenta.
+- This software is provided **"as is", without warranties** of any kind.
+  The authors are **not liable** for damages, data loss, identity exposure
+  or misuse.
+- **No tool guarantees absolute anonymity.** Real protection also depends on
+  your behavior (logins, torrents, plugins, WebRTC, etc.). Study opsec before
+  trusting any software with your safety.
+- Independent project, **not affiliated with or endorsed by** The Tor Project.
+  **Tor™** is a trademark of The Tor Project, Inc. — https://www.torproject.org/
+- Use in compliance with **your local laws**. Illegal activity stays illegal
+  behind any tool.
 
-## 📄 Licença
+## 📄 License
 
-Código próprio em **licença dupla Apache-2.0 / GPL-3.0** (ver `LICENSE-APACHE`
-e `LICENSE`). Inclui software de terceiros: Tor (BSD-3-clause),
-OpenSSL (Apache-2.0), libevent, zlib — textos integrais na página
-**Sobre** do app e em `anonymous-shield/vendor/docs/`.
+Own code under **dual license Apache-2.0 / GPL-3.0** (see `LICENSE-APACHE`
+and `LICENSE`). Bundles third-party software: Tor (BSD-3-clause),
+OpenSSL (Apache-2.0), libevent, zlib — full texts on the app's **About**
+page and under `anonymous-shield/vendor/docs/`.
