@@ -58,6 +58,8 @@ flowchart LR
 - **Diagnostics** — tests, leak check and internet restore.
 - **Update** — update the app via GitHub release or URL.
 - **About** — version, attribution and full license texts.
+- **Local accounts** — optional profiles with saved preferences, per-user
+  encrypted vault and separate Tor data (or guest mode, no password).
 
 (Hover any sidebar item in the app for the same hint in your language.)
 
