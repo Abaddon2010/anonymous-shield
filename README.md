@@ -5,6 +5,9 @@ inspired by Orbot: onion button with real bootstrap progress, exit IP/country,
 bridges (obfs4/snowflake/webtunnel), upstream proxy, local SOCKS, DNSCrypt,
 total protection (Windows proxy + firewall kill-switch), and in-app updates.
 
+🌍 **50 languages supported** (PT-BR/EN/ES fully translated, the rest via
+English fallback) — **more translations rolling out.**
+
 > **Tor™** is a trademark of The Tor Project, Inc. — this product is **not**
 > affiliated with or endorsed by them. Official site: https://www.torproject.org/
 
