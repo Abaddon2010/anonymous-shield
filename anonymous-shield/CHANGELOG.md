@@ -1,396 +1,386 @@
 # Changelog — Anonymous Shield
 
-## [1.8.1] — 2026-09-21 — Título proporcional + ícone sem cebola
-
-### Mudado
-- Login: nome "Anonymous Shield" em linha única reduzida (15px) — não
-  corta mais o "A" inicial nem o "D" final no painel de 300px.
-- Ícone novo (opção A): escudo + rota de 3 nós + cadeado, sem cebola
-  (marca do Tor Project) — aplicado no exe, login e marca da sidebar.
-- Botão principal da página Tor redesenhado como escudo (era anéis de
-  cebola); emojis 🧅 trocados por 🛡/🌐 em sidebar, login e fileiras.
-
-## [1.8.0] — 2026-09-21 — Renomeado para Anonymous Shield
-
-### Mudado (marca)
-- Nome/marca trocados em tudo (código, UI, instalador, firewall,
-  pastas de dados com migração automática da pasta antiga, User-Agent).
-  Motivo: a política de marca do Tor Project proíbe "Tor" em nome de
-  produto de terceiros sem autorização escrita.
-- Resquício intencional único: pepper criptográfico interno (mudá-lo
-  invalidaria os perfis existentes).
-- Regras de firewall antigas (TorShield-*) são limpas na reversão.
-- Sobre → texto com Tor™ + crédito + "não afiliado" + licenças.
-
-## [1.7.2] — Agendador + backup de perfil
+## [1.8.0] — 2026-09-21 — Renamed to Anonymous Shield
+
+### Changed (brand)
+- Name/brand swapped everywhere (code, UI, installer, firewall,
+  data folders with automatic migration from the old folder, User-Agent).
+  Reason: the Tor Project's trademark policy forbids "Tor" in third-party
+  product names without written authorization.
+- Single intentional leftover: internal cryptographic pepper (changing it
+  would invalidate existing profiles).
+- Old firewall rules (TorShield-*) are cleaned up on revert.
+- About → text with Tor™ + credit + "unaffiliated" + licenses.
 
-### Adicionado
-- ⏰ Agendador (página Tor): ligar/desligar e girar IP por horário
-  (HH:MM, dispara 1x por minuto, mostra o próximo).
-- ⬆⬇ Backup do perfil (Diagnóstico): exporta/importa o cofre em ZIP
-  (valida conteúdo, pede confirmação, senha do backup ao entrar).
+## [1.7.2] — Scheduler + profile backup
 
-## [1.7.1] — Sidebar arrastável
+### Added
+- ⏰ Scheduler (Tor page): turn on/off and rotate IP on schedule
+  (HH:MM, fires 1x per minute, shows the next one).
+- ⬆⬇ Profile backup (Diagnostics): exports/imports the vault as ZIP
+  (validates contents, asks for confirmation, backup password on entry).
 
-### Adicionado
-- Botão ✎ Organizar na sidebar: arraste itens p/ reordenar (inclusive
-  entre seções); ↺ restaura o padrão. Ordem salva por perfil.
-
-## [1.7.0] — Tradução total (10 idiomas × 476 chaves) — 2026-09-20 — E2E real do Tor
-
-### Adicionado
-- `tests/test_e2e_tor.py` (TORSHIELD_E2E=1): bootstrap + IsTor + Chrome
-  headless via Tor + proxy ida/volta. Provado: 3 passed.
-- Botão "Teste ponta a ponta" no Diagnóstico (saída/DNS/proxy).
+## [1.7.1] — Draggable sidebar
 
-## [1.6.3] — 2026-09-20 — Sem auto-conectar + login traduzido
+### Added
+- ✎ Organize button on the sidebar: drag items to reorder (including
+  across sections); ↺ restores the default. Order saved per profile.
+
+## [1.7.0] — Full translation (10 languages × 476 keys) — 2026-09-20 — Real Tor E2E
 
-### Mudado
-- Tor só conecta no clique (auto-conectar desligado por padrão;
-  quem ligou de propósito mantém via toggle).
-- Frases do login traduzidas nos 10 pacotes (feats, boas-vindas,
-  Caps Lock, rodapé, vazio, dica convidado).
+### Added
+- `tests/test_e2e_tor.py` (TORSHIELD_E2E=1): bootstrap + IsTor + headless
+  Chrome via Tor + round-trip proxy. Proven: 3 passed.
+- "End-to-end test" button on Diagnostics (exit/DNS/proxy).
 
-## [1.6.2] — 2026-09-20 — Circuito sempre visível
+## [1.6.3] — 2026-09-20 — No auto-connect + translated login
 
-### Corrigido
-- Card Circuito mostrava "Sem circuito" para sempre: faltavam o
-  `_circuit_job`, a conexão do signal e o reset do busy. Agora exibe
-  guarda→meio→saída com bandeiras + fallback p/ qualquer circuito.
+### Changed
+- Tor only connects on click (auto-connect off by default;
+  whoever deliberately enabled it keeps it via toggle).
+- Login strings translated in all 10 packs (feats, welcome,
+  Caps Lock, footer, empty, guest hint).
 
-## [1.6.1] — 2026-09-20 — Circuito Tor + DNS atual + nomes dos modos
+## [1.6.2] — 2026-09-20 — Always-visible circuit
 
-### Adicionado
-- Card Circuito Tor no Dashboard (guarda→meio→saída com bandeiras + IP,
-  botão novo circuito, atualiza sozinho).
-- Linha "DNS atual" (stub local, saída Tor ou DNS do sistema).
-- Descrição de cada modo pronta + nomes corretos nos botões.
+### Fixed
+- Circuit card stuck on "No circuit" forever: missing
+  `_circuit_job`, signal connection and busy reset. Now shows
+  guard→middle→exit with flags + fallback to any circuit.
 
-## [1.6.0] — 2026-09-20 — Modos, banda, SOCKS por app, conjure
+## [1.6.1] — 2026-09-20 — Tor circuit + current DNS + mode names
 
-### Adicionado
-- Modos prontos (Tor): ⚡ Rápido, 🥷 Anonimato, 🧱 Anti-censura
-  (detecta o atual; censura usa melhor transporte das bridges salvas).
-- Tráfego ao vivo no Dashboard (↓/↑ por segundo via controle).
-- SOCKS dedicado por app (9160+i no torrc; abrir usa a porta do app;
-  interruptor agora vale de verdade).
-- conjure-client como transporte (já vinha no pacote).
+### Added
+- Tor Circuit card on the Dashboard (guard→middle→exit with flags + IP,
+  new circuit button, self-updating).
+- "Current DNS" line (local stub, Tor exit or system DNS).
+- Ready-made description of each mode + correct names on buttons.
 
-## [1.5.3] — 2026-09-20 — Barra de título escura
+## [1.6.0] — 2026-09-20 — Modes, bandwidth, per-app SOCKS, conjure
 
-### Mudado
-- Título das janelas escuro combinando (roxo #1e1b4b no Win11),
-  mantendo botões nativos. Vale p/ login, senhas e app.
+### Added
+- Ready modes (Tor): ⚡ Fast, 🥷 Anonymous, 🧱 Anti-censorship
+  (detects the current one; censorship uses best transport from saved bridges).
+- Live traffic on the Dashboard (↓/↑ per second via control port).
+- Dedicated SOCKS per app (9160+i in torrc; opening uses the app's port;
+  the switch now actually works).
+- conjure-client as a transport (already shipped in the bundle).
 
-## [1.5.2] — 2026-09-20 — Login em dois painéis
+## [1.5.3] — 2026-09-20 — Dark title bar
 
-### Mudado
-- Login redesenhado: painel lateral de marca (logo, versão, recursos)
-  + formulário (perfis, senha 48px, olho alinhado, Caps Lock, entrar 50px).
+### Changed
+- Window titles dark to match (purple #1e1b4b on Win11),
+  keeping native buttons. Applies to login, passwords and app.
 
-## [1.5.1] — 2026-09-20 — DNS no padrão + 115 chaves traduzidas
-
-### Adicionado
-- Página DNS redesenhada (hero, segmentado, chip de escuta).
-- +40 chaves nos 10 pacotes de idioma (115 no total por idioma).
-- Instalador Inno Setup (`installer.iss`), update que se aplica e
-  reinicia, botão Tor Browser, DNS no Check Status, pytest + git.
-
-## [1.5.0] — 2026-09-20 — Janela Tor identificada
-
-### Mudado
-- "Abrir com Tor" abre página inicial roxa "TorShield — janela Tor":
-  impossível confundir com o Chrome normal/anônimo.
-
-## [1.4.9] — 2026-09-20 — Auditoria: threads + vazamento de credencial
-
-### Segurança/Correções
-- Nenhum `shell=True`, bind 0.0.0.0, eval ou pickle; tudo via listas de
-  args; SOCKS/controle/DNS só em 127.0.0.1.
-- Widgets nunca mais tocados de worker threads (`_ui_call` + `_push_log`
-  thread-safe; firewall/DNS/updater reorganizados).
-- Senha do proxy upstream mascarada nos logs (`user:***`).
-- Repo do updater sanitizado; metadados do update via Tor quando conectado.
-- `program="..."` com aspas nas regras de firewall (paths com espaço).
-
-## [1.4.8] — 2026-09-20 — Atualizar = projeto, via GitHub ou URL
-
-### Mudado
-- Página Atualizar deixa claro: atualiza o TorShield (o app), não o Tor
-  (o Tor embutido vem junto). Fontes: release GitHub ou URL direta com
-  SHA-256 esperado opcional (confere de verdade quando informado).
-
-## [1.4.7] — 2026-09-20 — 10 idiomas traduzidos de verdade
-
-### Adicionado
-- Tradução manual das telas principais em FR/DE/IT/ZH/JA/RU/NL/TR/AR/HI
-  (fallback por chave p/ EN no resto; demais 37 seguem selecionáveis).
-  Corrigido lookup case-insensitive (`zh-CN`).
-
-## [1.4.6] — 2026-09-20 — Credencial fora do disco + updater honesto
-
-### Segurança
-- torrc NUNCA mais tem senha de upstream: vai só host:porta; a
-  credencial é aplicada em runtime via SETCONF na porta de controle.
-- Updater: confirmação explícita se o repositório mudar + status
-  Authenticode (válida/sem/inválida) de cada download. Limite honesto:
-  checksum do próprio release não prova origem contra conta invadida.
-
-## [1.4.5] — 2026-09-20 — Rotação automática de IP
-
-### Adicionado
-- Página Tor: liga/desliga + intervalo em segundos/minutos (mín. 60s),
-  contagem regressiva e troca (nova identidade) automática no tempo.
-
-## [1.4.4] — 2026-09-20 — Botão Trocar IP no Dashboard
-
-### Adicionado
-- Botão 🔄 no hero do Dashboard: nova identidade Tor (novo IP de saída).
-  Só ativo quando conectado.
-
-## [1.4.3] — 2026-09-20 — Evitar 5/9/14 Olhos + torrc atômico
-
-### Adicionado
-- Saída fora dos 5/9/14 Olhos (você escolhe): Todos|−5|−9|−14 no card
-  de saída; vale ao vivo (controle) ou no torrc do próximo connect.
-
-### Corrigido
-- Escrita do torrc atômica (temp+replace) + 6 tentativas com backoff +
-  fallback único: stress 20/20 OK mesmo com filtro travando o arquivo.
-
-## [1.4.2] — 2026-09-20 — Desligar sem travar + forense de crash
-
-### Corrigido
-- Desligar não congela mais a UI (removido `wait(3000)` bloqueante) e não
-  derruba a janela (provado com Tor real + 60s de UI após desligar).
-- Forense: `crash.log`/`error.log` na pasta de dados se algo fatal ocorrer.
-
-## [1.4.1] — 2026-09-20 — Desligar/falhar restaura a internet sozinho
-
-### Corrigido
-- Desligar ou cancelar o Tor (e falha de conexão com proteção total)
-  restaura proxy + firewall automaticamente — sem mais internet morta.
-- Tor escolhe sozinho onde consegue escrever (padrão→Local→Temp) e
-  registra o local no log.
-
-## [1.4.0] — 2026-09-20 — Botão Restaurar internet (sem-rede após proteção total)
-
-### Corrigido
-- "Sem internet há 1h após implementar coisas": a v1.3.9 fez a proteção
-  total = proxy do Windows + firewall bloqueando tudo fora do Tor. Se o
-  app crashava/fechava antes de desfazer (bug "Desligar fecha o app" em
-  aberto), o PC ficava com proxy morto `socks=127.0.0.1:9150` + regras
-  `TorShield-BlockAll/Allow` — sem rede mesmo com o app fechado.
-- `↺ Restaurar padrão` NÃO tocava em proxy/firewall (só zerava o config),
-  então não adiantava.
-
-### Adicionado
-- Botão vermelho **🌐 Restaurar internet (padrão)** em Diagnóstico e em
-  Proteção Total: restaura o proxy anterior (ou desliga o proxy local),
-  apaga as regras BlockAll/Allow e limpa `protect_total/firewall_on/
-  kill_switch`. Preserva proxy de terceiros e idioma/tema.
-- `sysprotect.emergency_restore()`: mesma lógica reutilizável.
-- `reset_config` agora chama a restauração antes de zerar; `closeEvent`
-  sempre restaura ao sair (best-effort).
-- `Restaurar-Internet.bat`: socorro sem o app (PC offline) — rode como
-  administrador no PC afetado.
-
-## [1.3.9] — 2026-09-20 — Apps de verdade no Tor + total bloqueia resto
-
-### Corrigido
-- "Abrir com Tor" agora funciona: Chromium via `--proxy-server` + perfil
-  dedicado com anti-WebRTC; Firefox via perfil `user.js` (WebRTC off,
-  sem DoH); demais via `ALL_PROXY`. Antes o Chrome ignorava a variável.
-- Proteção total agora = Tor + proxy do Windows + firewall bloqueando o
-  resto (tor.exe/lyrebird sempre liberados): tudo passa pelo Tor ou fica
-  sem internet, não só a lista de apps.
-
-### Adicionado
-- Botão "Testar vazamento" (ipleak.net no navegador via Tor) na página
-  Aplicativos + log do método usado ao abrir cada app.
-- Desligar/cancelar o Tor com proteção total restaura tudo ao padrão
-  (proxy anterior, firewall limpo, flags off) + reversão automática ao
-  abrir se sobrou bloqueio de sessão morta.
-
-## [1.3.8] — 2026-09-20 — Hero travado em 95% + KPIs clicáveis
-
-### Corrigido
-- Hero do Dashboard congelava no último quadro do bootstrap (95%):
-  `_tick` não sincronizava o hero quando conectado. Agora mostra
-  CONECTADO 100% + IP de saída.
-- KPIs viraram botões: Proteção liga/desliga a proteção total;
-  Tor/SOCKS/DNS navegam para as páginas.
-
-## [1.3.7] — 2026-09-20 — Desligar não fecha + check de status
-
-### Corrigido
-- Desligar o Tor não fecha mais o app: sinais do worker velho são
-  desligados no `disconnect` (eram eles que resususcitavam "conectando"
-  e derrubavam a janela); progresso/erro/saída tardios ignorados.
-- Barra travada em 95% com status CONECTADO: mesma causa (sinal tardio);
-  agora é impossível regredir após conectado.
-
-### Adicionado
-- Botão ⟳ **Check Status** no hero do Dashboard: consulta fase do
-  bootstrap (controle) + saída IsTor e mostra o resultado no hero e no log.
-
-## [1.3.6] — 2026-09-20 — torrc à prova de trava
-
-### Corrigido
-- `write_torrc` com fallback: se o `torrc` principal estiver travado
-  (DENY, trava de outro processo), usa `torrc-<pid>` e segue; órfãos
-  >7 dias são limpos. Provado contra arquivo envenenado.
-- Causa do Erro 13 mapeada: arquivo com escrita negada apesar de
-  `<usuario>:(F)` (trava externa ao DACL); pasta e ACLs verificadas saudáveis.
-
-## [1.3.5] — 2026-09-20 — ACE nula + diálogos legíveis
-
-### Corrigido
-- Erro 13 raiz: ACE herdada vazia `<usuario>:(I)` sem permissões no torrc.
-  Reparo agora é `icacls /reset` + `/grant` explícito aditivo
-  (`acl_repair`, nunca remove nada); pasta `tor-data` com F explícito.
-- Diálogos de erro (QMessageBox) com tema: fundo escuro + texto claro
-  no modo escuro, fundo branco + texto escuro no claro.
-
-## [1.3.4] — 2026-09-20 — Scanner-via-Tor + diagnóstico Erro 13
-
-### Corrigido
-- Scanner "Via Tor" em localhost/rede local agora é barrado com aviso
-  claro (antes inundava o tor.log com "malformed hostname" rejeitado
-  pelos exits — comportamento correto do Tor, alvo inválido nosso).
-- Erro 13 no torrc: `icacls /reset` também na pasta `data` + diagnóstico
-  da ACL anexado à mensagem quando tudo falha.
-- Log sem "✗ ✗" duplicado nas falhas do Tor.
-
-## [1.3.3] — 2026-09-20 — Correção Erro 13 no torrc (admin)
-
-### Corrigido
-- `lock_private` não mexe mais em herança de ACL (`icacls /inheritance:r`
-  travava o torrc com Permission denied, mordida na v1.3.1 ao rodar como
-  administrador). Pasta do perfil já restringe a SYSTEM/Admin/dono.
-- `write_torrc` com auto-reparo: `icacls /reset` no arquivo/pasta e nova
-  tentativa antes de falhar (cura arquivos travados pela v1.3.1).
-
-## [1.3.2] — 2026-09-20 — Painel nmap completo
-
-### Adicionado
-- Scanner com todas as funções: tipos (-sS/-sT/-sU/-sN/-sF/-sX/-sA),
-  portas (`-F`/`-p-`/faixas), descoberta (-Pn/-sn/-PS/-PA/-PU), -sV/-O/-A,
-  --reason, timing T0–T5, fragmentação (-f), decoys (-D), NSE
-  (--script/--script-args), saídas -oN/-oX/-oG, preview ao vivo do comando
-  e aviso quando exige administrador. Perfis rápidos preenchem o painel.
-
-## [1.3.2] — 2026-09-20 — Correção Erro 13 no torrc (admin)
-
-### Corrigido
-- `lock_private` não mexe mais em herança de ACL (`icacls /inheritance:r`
-  travava o torrc com Permission denied, mordida na v1.3.1 ao rodar como
-  administrador). Pasta do perfil já restringe a SYSTEM/Admin/dono.
-- `write_torrc` com auto-reparo: `icacls /reset` no arquivo/pasta e nova
-  tentativa antes de falhar (cura arquivos travados pela v1.3.1).
-
-## [1.3.1] — 2026-09-20 — Auditoria de segurança (8 itens)
-
-### Segurança (todos verificados com teste automatizado `sec_verify.py`)
-- **VPN sem rastro**: `vpn_pass` só em memória (`to_dict` remove, `load`
-  expurga legado); `ovpn-auth.txt` com ACL restrita (`lock_private`) e
-  triturado 25s após conectar + ao desconectar/falhar; dica na UI.
-- **Atualizador com SHA-256**: baixa checksum publicado do release e
-  compara; hash divergente = arquivo apagado + alerta; sem checksum =
-  aviso explícito.
-- **torrc blindado**: bridges/PT/upstream sanitizados (1 linha cada, sem
-  CR/LF); arquivo com ACL só-usuário (`lock_private`).
-- **Senha mínima 8** (era 4) em criar/trocar/usuário; senhas antigas
-  continuam valendo.
-- Tor embutido **0.4.9.12 = último security release** (verificado em
-  2026-09-20); versão exibida na página Atualizar (`tor_ver`).
-- Higiene: `SESSAO.md` sem caminhos pessoais; exe verificado com
-  0 ocorrências de username. `_device_secret` documentado como
-  ofuscação (DPAPI futuro).
-
-## [Unreleased] — era dashboard (2026-09-20, já no exe do desktop)
-
-### Adicionado
-- **Dashboard**: página inicial com hero, 4 KPIs (Tor/SOCKS/proteção/DNS),
-  ações rápidas e atividade recente; sidebar com seções.
-- **Página 🗂 Aplicativos**: interruptor por app (só ativados usam o Tor),
-  "Abrir com Tor", adicionar por caminho/`…`/Enter,
-  auto-detecção (Chrome/Edge/Discord...).
-- **Página 🔒 VPN**: VPNs externas detectadas + OpenVPN própria
-  (Tor-sobre-VPN), kill-switch libera exes da VPN, log embutido.
-- **50 idiomas** no login e na topbar (PT/EN/ES completos, resto via EN),
-  detecção automática do sistema.
-- **Ícone caveira-cebola** (novo `assets/icon.png`/`.ico`).
-
-### Mudado
-- Login redesenhado (hero gradiente, logo real, pills) + `PassDialog`
-  no mesmo visual.
-- Topbar com "TorShield" fixo; página Proxy e sidebar no padrão dashboard
-  (navegação roxo-clara no modo escuro).
-- **Convidado entra sem senha** (config em texto local).
-- Botão Adicionar mostra erro/sucesso inline em vez de falhar em silêncio.
-
-## [1.2.0] — 2026-09-19 — Cofre AES-256 + usuários locais + IP em destaque
-
-### Adicionado
-- **Cofre AES-256-GCM** em tudo parado: `config.enc` + senha mestra
-  (PBKDF2-SHA256 600k), porta no arranque (criar/pedir/trocar), triturar
-  plaintext, `Trocar senha` no Diagnóstico.
-- **Usuários locais (opcional)**: tela inicial com entrar/criar/excluir ou
-  ir sem usuário; nomes criptografados (chave do dispositivo), senha por
-  PBKDF2, cofre e dados Tor separados por usuário.
-- **IP em destaque** no Início: número grande + país + copiar (e "…"
-  enquanto busca).
-
-## [1.1.1] — 2026-09-19 — Auditoria anti-dados-pessoais
-
-### Privacidade (achado real corrigido)
-- `config.json` guardava paths absolutos de apps (`C:\Users\<nome>\...`).
-  Agora salva forma portátil (`%PROGRAMFILES%`, `%LOCALAPPDATA%`, …) e
-  expande só em runtime (`sysprotect.portable/expand`); migração automática.
-- Varredura completa: fonte sem nomes/paths/IPs/emails; exe sem username,
-  hostname ou path de projeto (0 ocorrências); `torrc`/TOML gerados são
-  cache funcional recriável (ver `🧹 Limpar dados`).
-
-## [1.1.0] — 2026-09-19 — Home toggle, Scanner nmap, DNSCrypt combinado
-
-### Adicionado
-- Início com botão largo **Conectar/Desligar** (aperta p/ ligar, aperta p/
-  desligar) além da cebola.
-- Página **◉ Scanner**: usa o **nmap real** se instalado (Rápida, Serviços,
-  Completa, SO, ping sweep, personalizado, --open, -Pn, salvar relatório)
-  ou scanner embutido (top portas + banner + rDNS, opcional via Tor).
-- **DNSCrypt combinado** (`Tor + local`): stub local sobe junto com o Tor;
-  firewall já o libera junto. Terceiro modo na aba DNS.
-
-## [1.0.2] — 2026-09-19 — Remoção total do Rust
-
-### Removido
-- Pasta `tor-shield/` inteira (fonte + `target/` de 14,9 GB).
-- Toolchain Rust (`rustup self uninstall`: `.cargo` 0,76 GB + `.rustup`
-  1,28 GB removidos; sem `cargo`/`rustc`/`rustup` na máquina).
-- Dados do Arti (`%LOCALAPPDATA%\torproject`), temps de teste (`torprobe`,
-  logs de sonda). Total liberado: **~17 GB**.
-- Resto: só a pasta vazia `tor-shield/` (travada por Explorer/VS Code
-  abertos nela — fechar e apagar manualmente).
-
-## [1.0.1] — 2026-09-19 — Paridade total com o Rust
-
-Auditoria item a item contra o TorShield Rust (v0.12): faltavam 4 coisas,
-todas implementadas — cards de estatísticas no Início, botão Cancelar
-conectando, botões Abrir pasta/Restaurar no Diagnóstico (métodos existiam,
-sem botão), aviso WebTunnel na aba Pontes, 8 chaves i18n.
-
-## [1.0.0] — 2026-09-19 — Migração Python + tor oficial
-
-### Decidido
-- Reescrita completa em **Python + PyQt6 + stem + tor.exe oficial**
-  (Expert Bundle 15.0.23 em `vendor/`), após prova de que o Arti travava
-  no consenso (`15%` / `Can't bootstrap a Tor directory`) enquanto o
-  daemon C bootstrap 100% + `IsTor:true` + `NEWNYM` na mesma máquina/rede.
-
-### Adicionado (paridade)
-- Botão-cebola, fases, IP/país, nova identidade, bridges (Direto→custom,
-  Colar, auto-ativa, lyrebird p/ obfs4), upstream, SOCKS, DNSCrypt,
-  Proteção Total + por app, Logs (tor.log real), Diagnóstico (Tor/rede/wipe),
-  Atualizar, menu ☰, temas, PT-BR/EN/ES, instância única, firewall auto.
+## [1.5.2] — 2026-09-20 — Two-panel login
+
+### Changed
+- Redesigned login: brand side panel (logo, version, features)
+  + form (profiles, 48px password, aligned eye, Caps Lock, 50px sign-in).
+
+## [1.5.1] — 2026-09-20 — Standard DNS + 115 translated keys
+
+### Added
+- Redesigned DNS page (hero, segmented control, listen chip).
+- +40 keys in the 10 language packs (115 total per language).
+- Inno Setup installer (`installer.iss`), self-applying updater with
+  restart, Tor Browser button, DNS in Check Status, pytest + git.
+
+## [1.5.0] — 2026-09-20 — Identified Tor window
+
+### Changed
+- "Open with Tor" opens purple home page "TorShield — Tor window":
+  impossible to confuse with normal/anonymous Chrome.
+
+## [1.4.9] — 2026-09-20 — Audit: threads + credential leak
+
+### Security/Fixes
+- No `shell=True`, 0.0.0.0 binds, eval or pickle; everything via arg
+  lists; SOCKS/control/DNS on 127.0.0.1 only.
+- Widgets never touched from worker threads (`_ui_call` + `_push_log`
+  thread-safe; firewall/DNS/updater reorganized).
+- Upstream proxy password masked in logs (`user:***`).
+- Sanitized updater repo; update metadata via Tor when connected.
+- `program="..."` quoted in firewall rules (paths with spaces).
+
+## [1.4.8] — 2026-09-20 — Update = project, via GitHub or URL
+
+### Changed
+- Update page makes it clear: it updates TorShield (the app), not Tor
+  (the bundled Tor ships along). Sources: GitHub release or direct URL with
+  optional expected SHA-256 (actually verified when provided).
+
+## [1.4.7] — 2026-09-20 — 10 languages truly translated
+
+### Added
+- Hand translation of the main screens into FR/DE/IT/ZH/JA/RU/NL/TR/AR/HI
+  (per-key fallback to EN for the rest; other 37 remain selectable).
+  Fixed case-insensitive lookup (`zh-CN`).
+
+## [1.4.6] — 2026-09-20 — Credential off disk + honest updater
+
+### Security
+- torrc NEVER carries the upstream password again: host:port only; the
+  credential is applied at runtime via SETCONF on the control port.
+- Updater: explicit confirmation if the repository changes + Authenticode
+  status (valid/missing/invalid) of each download. Honest limit:
+  a release's own checksum doesn't prove origin against a hijacked account.
+
+## [1.4.5] — 2026-09-20 — Automatic IP rotation
+
+### Added
+- Tor page: on/off + interval in seconds/minutes (min. 60s),
+  countdown and automatic (new identity) rotation on schedule.
+
+## [1.4.4] — 2026-09-20 — Change IP button on Dashboard
+
+### Added
+- 🔄 button on the Dashboard hero: new Tor identity (new exit IP).
+  Only active while connected.
+
+## [1.4.3] — 2026-09-20 — Avoid 5/9/14 Eyes + atomic torrc
+
+### Added
+- Exits outside 5/9/14 Eyes (your choice): All|−5|−9|−14 on the exit
+  card; applies live (control port) or in the next connect's torrc.
+
+### Fixed
+- Atomic torrc writes (temp+replace) + 6 retries with backoff +
+  single fallback: 20/20 stress OK even with a filter locking the file.
+
+## [1.4.2] — 2026-09-20 — Hang-free shutdown + crash forensics
+
+### Fixed
+- Turning off no longer freezes the UI (blocking `wait(3000)` removed) nor
+  kills the window (proven with real Tor + 60s of UI after shutdown).
+- Forensics: `crash.log`/`error.log` in the data folder on fatal events.
+
+## [1.4.1] — 2026-09-20 — Shutdown/failure restores internet alone
+
+### Fixed
+- Turning Tor off or cancelling it (and connection failure under total
+  protection) automatically restores proxy + firewall — no more dead internet.
+- Tor picks on its own where it can write (default→Local→Temp) and
+  logs the location.
+
+## [1.4.0] — 2026-09-20 — Restore internet button (no-network after total protection)
+
+### Fixed
+- "No internet for 1h after adding stuff": v1.3.9 made total protection =
+  Windows proxy + firewall blocking everything outside Tor. If the
+  app crashed/closed before undoing it ("Turn off kills the app" bug still
+  open), the PC was left with dead proxy `socks=127.0.0.1:9150` + rules
+  `TorShield-BlockAll/Allow` — no network even with the app closed.
+- `↺ Restore default` did NOT touch proxy/firewall (it only zeroed the config),
+  so it didn't help.
+
+### Added
+- Red **🌐 Restore internet (default)** button on Diagnostics and on
+  Total Protection: restores the previous proxy (or turns the local proxy off),
+  deletes the BlockAll/Allow rules and clears `protect_total/firewall_on/
+  kill_switch`. Preserves third-party proxies and language/theme.
+- `sysprotect.emergency_restore()`: same reusable logic.
+- `reset_config` now restores before zeroing; `closeEvent`
+  always restores on exit (best-effort).
+- `Restaurar-Internet.bat`: rescue without the app (offline PC) — run as
+  administrator on the affected PC.
+
+## [1.3.9] — 2026-09-20 — Real apps on Tor + total blocks the rest
+
+### Fixed
+- "Open with Tor" now works: Chromium via `--proxy-server` + dedicated
+  profile with anti-WebRTC; Firefox via `user.js` profile (WebRTC off,
+  no DoH); others via `ALL_PROXY`. Chrome used to ignore the variable.
+- Total protection is now = Tor + Windows proxy + firewall blocking the
+  rest (tor.exe/lyrebird always allowed): everything goes through Tor or
+  stays offline, not just the app list.
+
+### Added
+- "Leak test" button (ipleak.net in the browser via Tor) on the
+  Applications page + log of the method used to open each app.
+- Turning Tor off/cancelling under total protection restores everything
+  to default (previous proxy, clean firewall, flags off) + automatic
+  rollback on launch if a dead session left a block behind.
+
+## [1.3.8] — 2026-09-20 — Hero stuck at 95% + clickable KPIs
+
+### Fixed
+- Dashboard hero froze on the last bootstrap frame (95%):
+  `_tick` didn't sync the hero when connected. Now shows
+  CONNECTED 100% + exit IP.
+- KPIs became buttons: Protection toggles total protection;
+  Tor/SOCKS/DNS navigate to their pages.
+
+## [1.3.7] — 2026-09-20 — Turn-off doesn't quit + status check
+
+### Fixed
+- Turning Tor off no longer quits the app: stale worker signals are
+  disconnected on `disconnect` (they used to resurrect "connecting"
+  and kill the window); late progress/error/exit ignored.
+- Bar stuck at 95% with CONNECTED status: same cause (late signal);
+  regressing after connected is now impossible.
+
+### Added
+- ⟳ **Check Status** button on the Dashboard hero: queries bootstrap
+  phase (control port) + IsTor exit and shows the result on the hero and log.
+
+## [1.3.6] — 2026-09-20 — Lock-proof torrc
+
+### Fixed
+- `write_torrc` with fallback: if the main `torrc` is locked
+  (DENY, another process's lock), uses `torrc-<pid>` and carries on; orphans
+  older than 7 days are cleaned. Proven against a poisoned file.
+- Root cause of Error 13 mapped: file with denied writes despite
+  `<user>:(F)` (lock external to the DACL); folder and ACLs verified healthy.
+
+## [1.3.5] — 2026-09-20 — Null ACE + readable dialogs
+
+### Fixed
+- Error 13 root cause: empty inherited ACE `<user>:(I)` with no permissions on torrc.
+  Repair is now `icacls /reset` + explicit additive `/grant`
+  (`acl_repair`, never removes anything); `tor-data` folder with explicit F.
+- Error dialogs (QMessageBox) themed: dark background + light text
+  in dark mode, white background + dark text in light mode.
+
+## [1.3.4] — 2026-09-20 — Scanner-via-Tor + Error 13 diagnostics
+
+### Fixed
+- "Via Tor" scanner on localhost/local network is now blocked with a clear
+  warning (it used to flood tor.log with "malformed hostname" rejected
+  by exits — correct Tor behavior, our target was invalid).
+- Error 13 on torrc: `icacls /reset` on the `data` folder too + ACL
+  diagnostics attached to the message when everything fails.
+- Log without duplicated "✗ ✗" on Tor failures.
+
+## [1.3.3] — 2026-09-20 — Error 13 fix on torrc (admin)
+
+### Fixed
+- `lock_private` no longer touches ACL inheritance (`icacls /inheritance:r`
+  locked torrc with Permission denied, fallout from v1.3.1 when running as
+  administrator). The profile folder already restricts to SYSTEM/Admin/owner.
+- `write_torrc` with self-repair: `icacls /reset` on file/folder and a new
+  attempt before failing (heals files locked by v1.3.1).
+
+## [1.3.2] — 2026-09-20 — Full nmap panel
+
+### Added
+- Scanner with all functions: types (-sS/-sT/-sU/-sN/-sF/-sX/-sA),
+  ports (`-F`/`-p-`/ranges), discovery (-Pn/-sn/-PS/-PA/-PU), -sV/-O/-A,
+  --reason, timing T0–T5, fragmentation (-f), decoys (-D), NSE
+  (--script/--script-args), -oN/-oX/-oG outputs, live command preview
+  and warning when administrator is required. Quick profiles fill the panel.
+
+## [1.3.2] — 2026-09-20 — Error 13 fix on torrc (admin)
+
+### Fixed
+- `lock_private` no longer touches ACL inheritance (`icacls /inheritance:r`
+  locked torrc with Permission denied, fallout from v1.3.1 when running as
+  administrator). The profile folder already restricts to SYSTEM/Admin/owner.
+- `write_torrc` with self-repair: `icacls /reset` on file/folder and a new
+  attempt before failing (heals files locked by v1.3.1).
+
+## [1.3.1] — 2026-09-20 — Security audit (8 items)
+
+### Security (all verified with automated test `sec_verify.py`)
+- **Traceless VPN**: `vpn_pass` in memory only (`to_dict` strips it, `load`
+  purges legacy); `ovpn-auth.txt` with restricted ACL (`lock_private`) and
+  shredded 25s after connecting + on disconnect/failure; UI hint.
+- **SHA-256 updater**: downloads the release's published checksum and
+  compares; mismatched hash = file deleted + alert; no checksum =
+  explicit warning.
+- **Shielded torrc**: bridges/PT/upstream sanitized (1 line each, no
+  CR/LF); file with user-only ACL (`lock_private`).
+- **8-char minimum password** (was 4) on create/change/user; old passwords
+  keep working.
+- Bundled Tor **0.4.9.12 = latest security release** (verified
+  2026-09-20); version shown on the Update page (`tor_ver`).
+- Hygiene: `SESSAO.md` free of personal paths; exe verified with
+  0 username occurrences. `_device_secret` documented as
+  obfuscation (future DPAPI).
+
+## [Unreleased] — dashboard era (2026-09-20, already in the desktop exe)
+
+### Added
+- **Dashboard**: home page with hero, 4 KPIs (Tor/SOCKS/protection/DNS),
+  quick actions and recent activity; sidebar with sections.
+- **🗂 Applications page**: per-app switch (only enabled ones use Tor),
+  "Open with Tor", add by path/`…`/Enter,
+  auto-detection (Chrome/Edge/Discord...).
+- **🔒 VPN page**: detected external VPNs + own OpenVPN
+  (Tor-over-VPN), kill-switch allows VPN exes, embedded log.
+- **50 languages** on login and topbar (PT/EN/ES complete, rest via EN),
+  automatic system detection.
+- **Skull-onion icon** (new `assets/icon.png`/`.ico`).
+
+### Changed
+- Redesigned login (gradient hero, real logo, pills) + `PassDialog`
+  in the same look.
+- Topbar with fixed "TorShield"; Proxy page and sidebar in dashboard
+  style (light-purple navigation in dark mode).
+- **Guest enters with no password** (local plaintext config).
+- Add button shows inline error/success instead of failing silently.
+
+## [1.2.0] — 2026-09-19 — AES-256 vault + local users + featured IP
+
+### Added
+- **AES-256-GCM vault** on everything at rest: `config.enc` + master
+  password (PBKDF2-SHA256 600k), gate on launch (create/ask/change), shred
+  plaintext, `Change password` on Diagnostics.
+- **Local users (optional)**: start screen with sign-in/create/delete or
+  go without user; encrypted names (device key), PBKDF2 password, vault
+  and Tor data separated per user.
+- **Featured IP** on Home: big number + country + copy ("…"
+  while fetching).
+
+## [1.1.1] — 2026-09-19 — Anti-personal-data audit
+
+### Privacy (real finding fixed)
+- `config.json` stored absolute app paths (`C:\Users\<name>\...`).
+  Now saves portable form (`%PROGRAMFILES%`, `%LOCALAPPDATA%`, …) and
+  expands only at runtime (`sysprotect.portable/expand`); automatic migration.
+- Full sweep: source free of names/paths/IPs/emails; exe free of username,
+  hostname or project path (0 occurrences); generated `torrc`/TOML are
+  recreatable functional cache (see `🧹 Clear data`).
+
+## [1.1.0] — 2026-09-19 — Home toggle, nmap Scanner, combined DNSCrypt
+
+### Added
+- Home with big **Connect/Disconnect** button (press to turn on, press to
+  turn off) plus the onion.
+- **◉ Scanner page**: uses the **real nmap** if installed (Quick, Services,
+  Full, OS, ping sweep, custom, --open, -Pn, save report)
+  or built-in scanner (top ports + banner + rDNS, optionally via Tor).
+- **Combined DNSCrypt** (`Tor + local`): local stub rises with Tor;
+  firewall already allows it together. Third mode on the DNS tab.
+
+## [1.0.2] — 2026-09-19 — Full Rust removal
+
+### Removed
+- Entire `tor-shield/` folder (source + 14.9 GB `target/`).
+- Rust toolchain (`rustup self uninstall`: 0.76 GB `.cargo` + 1.28 GB
+  `.rustup` removed; no `cargo`/`rustc`/`rustup` on the machine).
+- Arti data (`%LOCALAPPDATA%\torproject`), test temps (`torprobe`,
+  probe logs). Total freed: **~17 GB**.
+- Leftovers: only the empty `tor-shield/` folder (locked by open
+  Explorer/VS Code — close and delete manually).
+
+## [1.0.1] — 2026-09-19 — Full parity with Rust
+
+- Item-by-item audit against TorShield Rust (v0.12): 4 things missing,
+  all implemented — stats cards on Home, Cancel button while
+  connecting, Open folder/Restore buttons on Diagnostics (methods existed,
+  no button), WebTunnel warning on the Bridges tab, 8 i18n keys.
+
+## [1.0.0] — 2026-09-19 — Python migration + official tor
+
+### Decided
+- Complete rewrite in **Python + PyQt6 + stem + official tor.exe**
+  (Expert Bundle 15.0.23 in `vendor/`), after proving Arti stalled
+  on consensus (`15%` / `Can't bootstrap a Tor directory`) while the
+  C daemon bootstrapped 100% + `IsTor:true` + `NEWNYM` on the same machine/network.
+
+### Added (parity)
+- Onion button, phases, IP/country, new identity, bridges (Direct→custom,
+  Paste, auto-enable, lyrebird for obfs4), upstream, SOCKS, DNSCrypt,
+  Total Protection + per-app, Logs (real tor.log), Diagnostics (Tor/network/wipe),
+  Update, ☰ menu, themes, PT-BR/EN/ES, single instance, auto firewall.
