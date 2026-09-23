@@ -6,6 +6,9 @@ build/
 dist/
 installer-out/
 *.log
+*.deb
+anonymous-shield/deb-out/
+anonymous-shield/deb-stage/
 anonymous-shield/vendor/tor-expert.tar.gz
 anonymous-shield/CONVERSA.md
 anonymous-shield/SESSAO.md

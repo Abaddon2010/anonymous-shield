@@ -63,6 +63,13 @@ flowchart LR
 
 ## 🐧 Linux (Debian/Ubuntu — beta)
 
+**Via .deb (recommended):** grab `anonymous-shield_*_amd64.deb` from
+[**Releases**](../../releases) and `sudo dpkg -i *.deb` (deps via apt).
+Installs to `/opt`, adds a menu shortcut, and uses the **system Tor** —
+no embedded binary on Linux.
+
+**From source:**
+
 ```bash
 sudo apt install -y tor obfs4proxy python3-pyqt6 python3-pip python3-venv
 git clone https://github.com/Abaddon2010/anonymous-shield.git
@@ -71,9 +78,10 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 main.py
 ```
-O app usa o **Tor do sistema** (`apt`) — sem binário embutido no Linux.
-Proteção total/kill-switch de firewall ainda são **Windows-only** (no Linux
-o app conecta e navega via Tor, sem bloqueio de vazamento no firewall).
+
+Linux firewall kill-switch uses **nftables** (root via pkexec) with an
+allowlist of current guards; system proxy via GNOME. Snowflake is
+incompatible with the kill-switch (dynamic UDP).
 
 ## 📁 Layout
 

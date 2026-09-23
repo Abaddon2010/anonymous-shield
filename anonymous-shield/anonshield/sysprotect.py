@@ -51,6 +51,9 @@ def _reg_query(value: str) -> str | None:
 
 
 def get_proxy() -> SysProxy:
+    if os.name != "nt":
+        from . import sysprotect_linux as _lx
+        return _lx.get_proxy()
     en = _reg_query("ProxyEnable")
     return SysProxy(
         enabled=en in ("0x1", "1"),
@@ -65,6 +68,9 @@ def is_our_proxy(port: int) -> bool:
 
 
 def set_proxy(port: int) -> SysProxy:
+    if os.name != "nt":
+        from . import sysprotect_linux as _lx
+        return _lx.set_proxy(port)
     prev = get_proxy()
     for args in (
         ["add", INET_KEY, "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "1", "/f"],
@@ -78,6 +84,10 @@ def set_proxy(port: int) -> SysProxy:
 
 
 def restore_proxy(prev: SysProxy) -> None:
+    if os.name != "nt":
+        from . import sysprotect_linux as _lx
+        _lx.restore_proxy(prev)
+        return
     if prev.enabled:
         _run(["reg", "add", INET_KEY, "/v", "ProxyEnable", "/t", "REG_DWORD", "/d", "1", "/f"])
         if prev.server:
@@ -143,6 +153,9 @@ def _netsh(args: list[str]) -> tuple[bool, str]:
 
 
 def firewall_active() -> bool:
+    if os.name != "nt":
+        from . import sysprotect_linux as _lx
+        return _lx.firewall_active()
     ok, out = _netsh(["advfirewall", "firewall", "show", "rule", f"name={FW_BLOCK}"])
     if ok and "AnonShield-BlockAll" in out and "No rules match" not in out:
         return True
@@ -152,10 +165,29 @@ def firewall_active() -> bool:
 
 
 def firewall_unblock() -> None:
-    _netsh(["advfirewall", "firewall", "delete", "rule", f"name={FW_BLOCK}"])
+    if os.name != "nt":
+        from . import sysprotect_linux as _lx
+        _lx.firewall_unblock()
+        return
     _netsh(["advfirewall", "firewall", "delete", "rule", f"name={FW_ALLOW}"])
     for legacy in FW_LEGACY:
         _netsh(["advfirewall", "firewall", "delete", "rule", f"name={legacy}"])
+
+
+def set_linux_guards(ips) -> list[str]:
+    """Registra IPs de guardas p/ o kill-switch nftables (só Linux)."""
+    if os.name == "nt":
+        return []
+    from . import sysprotect_linux as _lx
+    return _lx.set_linux_guards(ips)
+
+
+def refresh_linux_guards() -> bool:
+    """Reaplica os sets de guardas sem reconstruir a tabela (só Linux)."""
+    if os.name == "nt":
+        return False
+    from . import sysprotect_linux as _lx
+    return _lx.refresh_linux_guards()
 
 
 def emergency_restore(prev: "SysProxy | dict | None" = None) -> dict:
@@ -212,6 +244,12 @@ def emergency_restore(prev: "SysProxy | dict | None" = None) -> dict:
 
 
 def firewall_block(extra_allow: str = "") -> None:
+    if os.name != "nt":
+        # Linux: kill-switch nftables por IPs de guardas (extra_allow por
+        # programa não se aplica; root via pkexec).
+        from . import sysprotect_linux as _lx
+        _lx.firewall_block()
+        return
     if not is_admin():
         raise PermissionError("admin-required")
     import sys as _sys
@@ -235,6 +273,8 @@ def firewall_block(extra_allow: str = "") -> None:
 
 def ensure_allowed_app() -> bool:
     """Garante regras IN+OUT do Firewall p/ o exe atual. True se criou/verificou."""
+    if os.name != "nt":
+        return True  # nftables não precisa de allow por programa
     if not is_admin():
         return False
     import sys as _sys
@@ -282,7 +322,10 @@ VPN_KNOWN = {
 
 
 def vpn_running() -> list[dict]:
-    """VPNs em execução: [{name, exe}]. Rápido (tasklist) + paths via CIM."""
+    """VPNs em execução: [{name, exe}]. Rápido (tasklist/pgrep) + paths."""
+    if os.name != "nt":
+        from . import sysprotect_linux as _lx
+        return _lx.vpn_running()
     ok, out = _run(["tasklist", "/FO", "CSV", "/NH"], timeout=15)
     if not ok:
         return []
@@ -397,6 +440,9 @@ _TOR_VER_CACHE: str | None = None
 
 def system_dns() -> str:
     """Primeiro DNS IPv4 da interface ativa (só leitura)."""
+    if os.name != "nt":
+        from . import sysprotect_linux as _lx
+        return _lx.system_dns()
     try:
         ok, out = _run(["powershell", "-NoProfile", "-Command",
                         "Get-DnsClientServerAddress -AddressFamily IPv4 | "
@@ -417,8 +463,11 @@ def socks_live(ports: list[int]) -> list[dict]:
     """Quem está passando pelo Tor AGORA: [{pid, name, port}].
 
     Varre conexões TCP com um dos ports SOCKS e resolve PID→nome.
-    Best-effort (netstat+tasklist, só leitura).
+    Best-effort (netstat+tasklist no Win; ss no Linux; só leitura).
     """
+    if os.name != "nt":
+        from . import sysprotect_linux as _lx
+        return _lx.socks_live(ports)
     out: list[dict] = []
     try:
         wanted = {int(p) for p in (ports or [])}

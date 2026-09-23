@@ -1273,6 +1273,15 @@ class UiLogic:
     def _on_circuit_result(self, info: list) -> None:
         self._circuit_busy = False
         self.circuit = info or []
+        try:
+            if os.name != "nt":
+                guards = [h.get("ip", "") for c in (info or [])
+                          for h in (c.get("path") or [])[:1]]
+                sysprotect.set_linux_guards(guards)
+                if sysprotect.firewall_active():
+                    sysprotect.refresh_linux_guards()
+        except Exception:
+            pass
         self._render_circuit()
 
     def _current_dns(self) -> str:

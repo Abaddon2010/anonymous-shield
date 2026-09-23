@@ -74,6 +74,32 @@ def test_torrc_never_store_logs(tmp_path):
     assert "Log notice stdout" in txt2 and "tor.log" not in txt2
 
 
+def test_linux_nft_script_e_guards():
+    from anonshield import sysprotect_linux as _lx
+    ok = _lx.set_linux_guards(["1.2.3.4", " 2606:4700:4700::1111 ",
+                               "nao-ip", "127.0.0.1", "10.0.0.1", "2001:db8::1",
+                               "1.2.3.4; rm -rf /", ""])
+    assert ok == ["1.2.3.4", "2606:4700:4700::1111"], ok
+    s = _lx.build_nft_script(["1.2.3.4"], ["2606:4700:4700::1111"])
+    assert "policy drop" in s and "1.2.3.4" in s and "2606:4700:4700::1111" in s
+    assert "rm -rf" not in s and "table inet anonshield" in s
+    assert "dport 53" not in s  # DNS bloqueado por padrão
+    s2 = _lx.build_nft_script([], [])
+    assert "255.255.255.254" in s2  # placeholder nunca vazio
+
+
+def test_linux_proxy_sem_gsettings():
+    import shutil
+    from anonshield import sysprotect_linux as _lx
+    if shutil.which("gsettings"):
+        return  # só testa a guarda onde não há GNOME
+    try:
+        _lx.set_proxy(9150)
+        raise AssertionError("deveria falhar sem gsettings")
+    except RuntimeError:
+        pass
+
+
 def test_bridge_lines_from():
     from anonshield.uilogic import bridge_lines_from, bridge_valid
     txt = "copie isso\nobfs4 1.2.3.4:443 ABCDEF cert=x iat-mode=0\nlixo\nBridge webtunnel [::1]:443 XYZ\n"
