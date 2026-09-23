@@ -34,7 +34,29 @@ def base_dir() -> str:
 
 
 def tor_bin() -> str:
+    """Binário do Tor: no Linux prefere o tor do sistema; senão o embutido."""
+    if os.name != "nt":
+        import shutil as _sh
+        for cand in (_sh.which("tor"),
+                     os.path.join(base_dir(), "vendor", "linux", "tor", "tor")):
+            if cand and os.path.exists(cand):
+                return cand
     return os.path.join(base_dir(), "vendor", "tor", "tor.exe")
+
+
+def pt_bin(name: str) -> str:
+    """Pluggable transport: sistema (Linux) → embutido (Windows)."""
+    table = {"lyrebird": ("obfs4proxy", "lyrebird", "lyrebird.exe"),
+             "conjure": ("conjure-client", "conjure-client", "conjure-client.exe")}
+    sys_name, _lin, win = table.get(name, (name, name, name + ".exe"))
+    if os.name != "nt":
+        import shutil as _sh
+        for cand in (_sh.which(sys_name),
+                     os.path.join(base_dir(), "vendor", "linux", "tor",
+                                  "pluggable_transports", sys_name)):
+            if cand and os.path.exists(cand):
+                return cand
+    return os.path.join(base_dir(), "vendor", "tor", "pluggable_transports", win)
 
 
 def geoip(base: str, name: str) -> str:
@@ -285,8 +307,8 @@ class TorWorker(QObject):
         return []
 
     def _pt_line(self) -> str:
-        lyrebird = os.path.join(base_dir(), "vendor", "tor", "pluggable_transports", "lyrebird.exe")
-        conjure = os.path.join(base_dir(), "vendor", "tor", "pluggable_transports", "conjure-client.exe")
+        lyrebird = pt_bin("lyrebird")
+        conjure = pt_bin("conjure")
         wants_obfs4 = any(b.strip().lower().startswith("obfs4") for b in self.cfg.bridges)
         wants_conjure = any(b.strip().lower().startswith("conjure") for b in self.cfg.bridges)
         custom = (self.cfg.pt_path or "").split("\n")[0].split("\r")[0].strip()

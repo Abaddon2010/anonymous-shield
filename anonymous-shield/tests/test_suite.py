@@ -75,11 +75,17 @@ def test_torrc_never_store_logs(tmp_path):
 
 
 def test_bridge_lines_from():
-    from anonshield.uilogic import bridge_lines_from
+    from anonshield.uilogic import bridge_lines_from, bridge_valid
     txt = "copie isso\nobfs4 1.2.3.4:443 ABCDEF cert=x iat-mode=0\nlixo\nBridge webtunnel [::1]:443 XYZ\n"
     out = bridge_lines_from(txt)
     assert len(out) == 2 and out[0].startswith("obfs4")
     assert bridge_lines_from("nada aqui") == []
+    good = "obfs4 185.177.207.233:11233 88DFC8F45500A56C740175A6604642CB50A83DAA cert=x iat-mode=0"
+    assert bridge_valid(good)
+    assert bridge_valid("Bridge " + good)
+    assert not bridge_valid("obfs4 185.177.207.233:11233 cert=x")
+    assert not bridge_valid("cRCX6rtbZvP2yLqf4Vh73epd66bKBetJ7gnNQjfqO6LFg")
+    assert not bridge_valid("")
 
 
 def test_vpn_pass_fora_do_disco(tmp_path):

@@ -93,6 +93,11 @@ def restore_proxy(prev: SysProxy) -> None:
 
 
 def is_admin() -> bool:
+    if os.name != "nt":
+        try:
+            return os.geteuid() == 0
+        except AttributeError:
+            return False
     ok, _ = _run(["net", "session"], timeout=10)
     return ok
 
@@ -119,10 +124,16 @@ def net_rescue() -> list[tuple[str, str]]:
     except Exception as e:  # noqa: BLE001
         rep.append(("rescue_proxy", f"fail {e}"[:80]))
     killed = []
-    for img in ("tor.exe", "dnscrypt-proxy.exe", "lyrebird.exe", "conjure-client.exe"):
-        ok, _ = _run(["taskkill", "/F", "/IM", img], timeout=15)
-        if ok:
-            killed.append(img)
+    if os.name == "nt":
+        for img in ("tor.exe", "dnscrypt-proxy.exe", "lyrebird.exe", "conjure-client.exe"):
+            ok, _ = _run(["taskkill", "/F", "/IM", img], timeout=15)
+            if ok:
+                killed.append(img)
+    else:
+        for img in ("tor", "obfs4proxy", "lyrebird", "conjure-client", "dnscrypt-proxy"):
+            ok, _ = _run(["pkill", "-x", img], timeout=15)
+            if ok:
+                killed.append(img)
     rep.append(("rescue_killed", ", ".join(killed) if killed else "-"))
     return rep
 

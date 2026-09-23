@@ -48,6 +48,17 @@ def bridge_lines_from(text: str) -> list:
     return out
 
 
+def bridge_valid(line: str) -> bool:
+    """Uma bridge válida tem transporte + host:porta + fingerprint (40 hex)."""
+    import re as _re
+    s = (line or "").strip()
+    if s.lower().startswith("bridge "):
+        s = s[7:].strip()
+    return bool(_re.match(
+        r"(?i)^(obfs4|webtunnel|snowflake)\s+"
+        r"(\[[0-9a-f:]+\]|[\w.-]+):\d+\s+[0-9a-f]{40}\b", s))
+
+
 def probe_host(host: str, port: int, via_tor: bool, socks_port: int) -> tuple[int, bool, str]:
     """Probe único (usado no ping sweep). Retorna (porta, aberta, banner)."""
     import socket as _s
@@ -919,9 +930,14 @@ class UiLogic:
 
     # ---------- tor ----------
     def describe_route(self) -> str:
-        base = self.tr("route_via") if self.cfg.upstream_enabled else self.tr("route_direct")
         if self.cfg.bridges_enabled and self.cfg.bridges:
-            base = f"{base} + {len(self.cfg.bridges)} bridge(s) [{self.cfg.bridge_preset}]"
+            # Com pontes não há rota "direta": ou pontes ou direto.
+            base = (f"{self.tr('route_bridges')}: {len(self.cfg.bridges)} "
+                    f"bridge(s) [{self.cfg.bridge_preset}]")
+            if self.cfg.upstream_enabled:
+                base = f"{self.tr('route_via')} + {base}"
+        else:
+            base = self.tr("route_via") if self.cfg.upstream_enabled else self.tr("route_direct")
         if getattr(self, "vpns", None):
             base = f"{base} + via VPN ({', '.join(self.vpns)})"
         if self.cfg.exit_mode in ("five", "nine", "fourteen"):
@@ -1676,16 +1692,24 @@ class UiLogic:
         if not lines:
             self._push_log(self.tr("log_br_empty"))
             return
-        self.cfg.bridges = lines
+        valid = [l for l in lines if bridge_valid(l)]
+        if not valid:
+            self._push_log(self.tr("log_br_none"))
+            return
+        if len(valid) != len(lines):
+            self._push_log(self.tr("log_br_invalid", n=len(lines) - len(valid)))
+        self.cfg.bridges = valid
         if not self.cfg.bridges_enabled:
             self.cfg.bridges_enabled = True
             self._push_log(self.tr("log_br_auto"))
         self.cfg.save()
-        self._push_log(self.tr("log_bridges", n=len(lines), p=self.cfg.bridge_preset))
-        self.lbl_br_count.setText(self.tr("br_count", n=len(lines)))
+        self._push_log(self.tr("log_bridges", n=len(valid), p=self.cfg.bridge_preset))
+        self.lbl_br_count.setText(self.tr("br_count", n=len(valid)))
         if self.cfg.use_tor:
             self.disconnect_tor(silent=True)
             self.connect_tor()
+        else:
+            self._push_log(self.tr("log_br_tor_off"))
 
     def _kill_toggled(self, v: bool) -> None:
         self.cfg.kill_switch = bool(v)
@@ -1939,15 +1963,11 @@ cert_refresh_delay = 240
         self.refresh_texts()
 
     def _fw_tor_exes(self) -> list:
-        """Exes que o kill-switch sempre libera (senão o próprio Tor morre)."""
+        """Bins que o kill-switch sempre libera (senão o próprio Tor morre)."""
         out = []
         try:
-            from .torctl import base_dir as _bd
-            cands = [os.path.join(_bd(), "vendor", "tor", "tor.exe"),
-                     os.path.join(_bd(), "vendor", "tor",
-                                  "pluggable_transports", "lyrebird.exe"),
-                     os.path.join(_bd(), "vendor", "tor",
-                                  "pluggable_transports", "conjure-client.exe")]
+            from .torctl import tor_bin as _tb, pt_bin as _pb
+            cands = [_tb(), _pb("lyrebird"), _pb("conjure")]
             pt = (self.cfg.pt_path or "").split("\n")[0].split("\r")[0].strip().split()
             if pt:
                 cands.append(pt[-1])

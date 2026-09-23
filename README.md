@@ -61,6 +61,20 @@ flowchart LR
 
 (Hover any sidebar item in the app for the same hint in your language.)
 
+## 🐧 Linux (Debian/Ubuntu — beta)
+
+```bash
+sudo apt install -y tor obfs4proxy python3-pyqt6 python3-pip python3-venv
+git clone https://github.com/Abaddon2010/anonymous-shield.git
+cd anonymous-shield/anonymous-shield
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+python3 main.py
+```
+O app usa o **Tor do sistema** (`apt`) — sem binário embutido no Linux.
+Proteção total/kill-switch de firewall ainda são **Windows-only** (no Linux
+o app conecta e navega via Tor, sem bloqueio de vazamento no firewall).
+
 ## 📁 Layout
 
 ```
