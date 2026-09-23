@@ -36,12 +36,12 @@ flowchart LR
 
 ## 🧪 Experimental — help wanted
 
-- **VPN (Tor-over-VPN / OpenVPN próprio):** ⚠️ recurso ainda **não validado**
-  em campo — se testar, [abra uma issue](../../issues) contando o resultado
-  (provedor, modo, funcionou ou não). Testadores são bem-vindos!
-- Gostou do projeto e quer ver esse e outros recursos evoluindo?
-  ☕ **[Doe via PayPal](https://www.paypal.com/donate/?hosted_button_id=U9K49V44Q7PAE)** — qualquer
-  valor ajuda a pagar tempo de desenvolvimento e testes.
+- **VPN (Tor-over-VPN / own OpenVPN):** ⚠️ feature **not yet field-validated**
+  — if you test it, [open an issue](../../issues) with the result
+  (provider, mode, worked or not). Testers welcome!
+- Like the project and want this and other features to evolve?
+  ☕ **[Donate via PayPal](https://www.paypal.com/donate/?hosted_button_id=U9K49V44Q7PAE)** — any
+  amount helps pay for development and testing time.
 
 ## ✨ What each page does
 
