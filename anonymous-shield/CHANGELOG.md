@@ -182,7 +182,7 @@
 - `sysprotect.emergency_restore()`: same reusable logic.
 - `reset_config` now restores before zeroing; `closeEvent`
   always restores on exit (best-effort).
-- `Restaurar-Internet.bat`: rescue without the app (offline PC) — run as
+- `Restore-Internet.bat`: rescue without the app (offline PC) — run as
   administrator on the affected PC.
 
 ## [1.3.9] — 2026-09-20 — Real apps on Tor + total blocks the rest
