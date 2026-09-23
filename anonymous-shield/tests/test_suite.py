@@ -74,6 +74,14 @@ def test_torrc_never_store_logs(tmp_path):
     assert "Log notice stdout" in txt2 and "tor.log" not in txt2
 
 
+def test_bridge_lines_from():
+    from anonshield.uilogic import bridge_lines_from
+    txt = "copie isso\nobfs4 1.2.3.4:443 ABCDEF cert=x iat-mode=0\nlixo\nBridge webtunnel [::1]:443 XYZ\n"
+    out = bridge_lines_from(txt)
+    assert len(out) == 2 and out[0].startswith("obfs4")
+    assert bridge_lines_from("nada aqui") == []
+
+
 def test_vpn_pass_fora_do_disco(tmp_path):
     set_data_dir(str(tmp_path))
     c = AppConfig()

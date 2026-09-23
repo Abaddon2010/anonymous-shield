@@ -40,6 +40,24 @@ flowchart LR
   ☕ **[Doe via PayPal](https://www.paypal.com/donate/?hosted_button_id=U9K49V44Q7PAE)** — qualquer
   valor ajuda a pagar tempo de desenvolvimento e testes.
 
+## ✨ What each page does
+
+- **Dashboard** — overview: Tor status, exit IP and quick actions.
+- **Tor** — connect/disconnect and follow bootstrap progress.
+- **Total protection** — Windows proxy + firewall kill-switch (Tor or nothing).
+- **Apps** — choose which apps use Tor; open programs through Tor.
+- **Bridges** — anti-censorship transports (obfs4, snowflake, webtunnel).
+- **Upstream** — provider/VPN proxy before Tor.
+- **DNS** — DNS over Tor or local DNSCrypt.
+- **VPN** — own OpenVPN over Tor (🧪 experimental, unvalidated).
+- **Scanner** — network/port scan (nmap or built-in).
+- **Logs** — app events + Tor log, with **never-store-logs** mode.
+- **Diagnostics** — tests, leak check and internet restore.
+- **Update** — update the app via GitHub release or URL.
+- **About** — version, attribution and full license texts.
+
+(Hover any sidebar item in the app for the same hint in your language.)
+
 ## 📁 Layout
 
 ```

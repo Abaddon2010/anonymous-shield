@@ -37,6 +37,17 @@ def tor_reachable_host(host: str) -> bool:
     return True
 
 
+def bridge_lines_from(text: str) -> list:
+    """Extrai linhas de bridge (obfs4/webtunnel/snowflake/Bridge) de um texto."""
+    import re as _re
+    out = []
+    for ln in (text or "").splitlines():
+        s = ln.strip()
+        if s and _re.match(r"(?i)^(obfs4|webtunnel|snowflake|bridge)\s+\S", s):
+            out.append(s)
+    return out
+
+
 def probe_host(host: str, port: int, via_tor: bool, socks_port: int) -> tuple[int, bool, str]:
     """Probe único (usado no ping sweep). Retorna (porta, aberta, banner)."""
     import socket as _s
@@ -120,6 +131,9 @@ class UiLogic:
             # i18n já pode trazer o emoji (ex. "🛡 Total"): não duplicar.
             txt = nm if nm.startswith(ico) else f"{ico}  {nm}"
             btn.setText(ico if collapsed else txt)
+            tip = T(f"tip_{pid}")
+            if tip != f"tip_{pid}":
+                btn.setToolTip(tip)
         # títulos das seções da sidebar
         secs = {"sec_main": "sec_main", "sec_net": "sec_net", "sec_tools": "sec_tools"}
         for raw, key in secs.items():
@@ -1593,6 +1607,22 @@ class UiLogic:
                                     self._push_log(f"[tor] {line[-380:]}")
                     except OSError:
                         pass
+        # auto-cola: bridge nova no clipboard entra sozinha na página Pontes
+        try:
+            if getattr(self, "_current_page", "") == "bridges" and hasattr(self, "edit_bridges"):
+                clip = QApplication.clipboard().text() or ""
+                if clip != getattr(self, "_clip_seen", None):
+                    self._clip_seen = clip
+                    novas = [l for l in bridge_lines_from(clip)
+                             if l not in self.edit_bridges.toPlainText()]
+                    if novas:
+                        cur = self.edit_bridges.toPlainText()
+                        if cur and not cur.endswith("\n"):
+                            cur += "\n"
+                        self.edit_bridges.setPlainText(cur + "\n".join(novas))
+                        self._push_log(self.tr("log_pasted", n=len(novas)))
+        except (RuntimeError, AttributeError):
+            pass
         # drena saída do scanner
         q = getattr(self, "_scan_q", None)
         if q is not None and hasattr(self, "scan_out"):
