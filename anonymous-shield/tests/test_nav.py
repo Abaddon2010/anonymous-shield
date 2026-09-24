@@ -57,5 +57,7 @@ def test_nav_move_e_persiste():
 
 def test_nav_textos_pt():
     app, w = _make_app()
+    w.cfg.lang = "pt-BR"
+    w.refresh_texts()
     assert "Organizar" in w.btn_nav_edit.text()
     assert w.btn_nav_reset.toolTip() == "Restaurar ordem do menu"

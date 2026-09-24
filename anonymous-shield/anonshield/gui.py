@@ -2437,6 +2437,14 @@ class MainWindow(QMainWindow):
         self.btn_vault = _mkbtn("")
         self.btn_vault.clicked.connect(self._change_password)
         sl.addWidget(self.btn_vault)
+        self.btn_duress = _mkbtn("")
+        self.btn_duress.setStyleSheet("background:#3a1620; border:1px solid #7f2d3d; color:#fca5a5; font-weight:bold; border-radius:10px;")
+        self.btn_duress.clicked.connect(self._duress_dialog)
+        sl.addWidget(self.btn_duress)
+        self.lbl_duress = QLabel()
+        self.lbl_duress.setObjectName("muted")
+        self.lbl_duress.setWordWrap(True)
+        sl.addWidget(self.lbl_duress)
         cl.addWidget(sec)
         # Dados: abrir pasta + restaurar padrão (paridade com menu Rust)
         drow = QHBoxLayout()
@@ -3142,6 +3150,14 @@ class LoginDialog(QDialog):
         u = self._selected()
         if not u:
             self._show_msg(t(self._lang, "user_need_select"))
+            return
+        if _users.check_duress(u["id"], self.ed_pass.text()):
+            # Senha de coação: apaga tudo e entra como convidado vazio.
+            _users.duress_wipe(u["id"])
+            self.refresh_names()
+            self.ed_pass.clear()
+            self.result_kind = "guest"
+            self.accept()
             return
         if _users.verify_user(u["id"], self.ed_pass.text()):
             _users.reset_fails(u["id"])

@@ -250,3 +250,80 @@ def delete_user(uid: str, password: str) -> bool:
     except OSError:
         pass
     return True
+
+
+# ---------- senha de coação (duress): apaga tudo e finge convidado ----------
+
+def has_duress(uid: str) -> bool:
+    """Se há senha de coação configurada."""
+    for u in _load_meta().get("users", []):
+        if u.get("id") == uid:
+            return bool(u.get("dh_hash") and u.get("dh_salt"))
+    return False
+
+
+def set_duress(uid: str, password: str) -> None:
+    """Define a senha de coação. Erros em ValueError (short/same/nouser)."""
+    if len(password or "") < 8:
+        raise ValueError("short")
+    if verify_user(uid, password):
+        raise ValueError("same")
+    meta = _load_meta()
+    for u in meta.get("users", []):
+        if u.get("id") == uid:
+            salt = secrets.token_bytes(16)
+            u["dh_salt"] = base64.b64encode(salt).decode()
+            u["dh_hash"] = base64.b64encode(_hash_pw(password, salt)).decode()
+            _save_meta(meta)
+            return
+    raise ValueError("nouser")
+
+
+def clear_duress(uid: str) -> None:
+    meta = _load_meta()
+    for u in meta.get("users", []):
+        if u.get("id") == uid:
+            u.pop("dh_salt", None)
+            u.pop("dh_hash", None)
+            _save_meta(meta)
+            return
+
+
+def check_duress(uid: str, password: str) -> bool:
+    """True se a senha digitada é a de coação (vale mesmo bloqueado)."""
+    for u in _load_meta().get("users", []):
+        if u.get("id") == uid:
+            try:
+                salt = base64.b64decode(u.get("dh_salt") or "")
+                expect = base64.b64decode(u.get("dh_hash") or "")
+            except (ValueError, KeyError, TypeError):
+                return False
+            if not salt or not expect:
+                return False
+            return hmac.compare_digest(_hash_pw(password or "", salt), expect)
+    return False
+
+
+def duress_wipe(uid: str) -> bool:
+    """Apaga CONTA + cofre + dados Tor do usuário (recursivo, triturado).
+
+    Usado ao digitarem a senha de coação no login. Retorna True se existia.
+    """
+    meta = _load_meta()
+    if not any(u.get("id") == uid for u in meta.get("users", [])):
+        return False
+    meta["users"] = [u for u in meta.get("users", []) if u.get("id") != uid]
+    _save_meta(meta)
+    udir = user_dir(uid)
+    try:
+        for root, _, files in os.walk(udir):
+            for name in files:
+                try:
+                    _vault.shred(os.path.join(root, name))
+                except OSError:
+                    pass
+        import shutil as _sh
+        _sh.rmtree(udir, ignore_errors=True)
+    except OSError:
+        pass
+    return True

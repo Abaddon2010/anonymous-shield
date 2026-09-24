@@ -3,12 +3,13 @@
 # Uso: sh packaging/build-deb.sh   (rode na raiz do repo Test/)
 # Saída: anonymous-shield/deb-out/anonymous-shield_<ver>_amd64.deb
 set -eu
-cd "$(dirname "$0")/../.."
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
 ROOT="$(pwd)"
 VER="$(python3 -c "import re;print(re.search(r'__version__ *= *\"([^\"]+)\"', open('anonymous-shield/anonshield/__init__.py').read()).group(1))")"
-STAGE="anonymous-shield/deb-stage"
+STAGE="$(mktemp -d)/anonshield-deb"
 OUT="anonymous-shield/deb-out"
-rm -rf "$STAGE" "$OUT"
+rm -rf "$OUT"
 mkdir -p "$STAGE/DEBIAN" "$STAGE/opt/anonymous-shield" \
   "$STAGE/usr/bin" "$STAGE/usr/share/applications" \
   "$STAGE/usr/share/icons/hicolor/256x256/apps" "$OUT"
@@ -62,4 +63,5 @@ EOF
 chmod 755 "$STAGE/DEBIAN/postinst"
 
 dpkg-deb --build "$STAGE" "$OUT/anonymous-shield_${VER}_amd64.deb"
+rm -rf "$(dirname "$STAGE")"
 echo "OK: $OUT/anonymous-shield_${VER}_amd64.deb"

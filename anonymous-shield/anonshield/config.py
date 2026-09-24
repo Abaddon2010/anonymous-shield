@@ -173,10 +173,13 @@ class AppConfig:
     vpn_pass: str = field(default="", repr=False, compare=False)
     # Senha mestra (SÓ memória — nunca vai ao disco).
     password: str = field(default="", repr=False, compare=False)
+    # UID do usuário logado (SÓ memória — nunca vai ao disco).
+    current_uid: str = field(default="", repr=False, compare=False)
 
     def to_dict(self) -> dict:
         raw = asdict(self)
         raw.pop("password", None)
+        raw.pop("current_uid", None)
         raw.pop("vpn_pass", None)  # segredo: só memória, nunca em disco
         return raw
 
@@ -205,7 +208,7 @@ class AppConfig:
                                       "enabled": bool(a.get("enabled", True)),
                                       "custom": bool(a.get("custom", False))})
                 raw["apps"] = clean
-            known = set(cls.__dataclass_fields__) - {"password"}
+            known = set(cls.__dataclass_fields__) - {"password", "current_uid"}
             obj = cls(**{k: v for k, v in raw.items() if k in known})
             obj.vpn_pass = ""  # expurga segredo legado
             if not obj.auto_connect_explicit:
@@ -221,7 +224,7 @@ class AppConfig:
             if not password:
                 raise _vault.VaultError("locked")
             raw = _vault.decrypt_obj(password, cfg)
-            known = set(cls.__dataclass_fields__) - {"password"}
+            known = set(cls.__dataclass_fields__) - {"password", "current_uid"}
             obj = cls(**{k: v for k, v in raw.items() if k in known})
             obj.password = password
             obj.vpn_pass = ""  # expurga segredo legado; digitar 1x por sessão
@@ -252,7 +255,7 @@ class AppConfig:
                                       "enabled": bool(a.get("enabled", True)),
                                       "custom": bool(a.get("custom", False))})
                 raw["apps"] = clean
-            known = set(cls.__dataclass_fields__) - {"password"}
+            known = set(cls.__dataclass_fields__) - {"password", "current_uid"}
             obj = cls(**{k: v for k, v in raw.items() if k in known})
             obj.password = password
             obj.vpn_pass = ""  # expurga segredo legado

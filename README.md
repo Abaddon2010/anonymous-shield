@@ -60,26 +60,31 @@ flowchart LR
 - **About** — version, attribution and full license texts.
 - **Local accounts** — optional profiles with saved preferences, per-user
   encrypted vault and separate Tor data (or guest mode, no password).
+- **Duress password** — fake password that wipes the profile and opens an
+  empty guest session (against coercion).
 
 (Hover any sidebar item in the app for the same hint in your language.)
 
 ## 🐧 Linux (Debian/Ubuntu — beta)
 
 **Via .deb (recommended):** grab `anonymous-shield_*_amd64.deb` from
-[**Releases**](../../releases) and `sudo dpkg -i *.deb` (deps via apt).
-Installs to `/opt`, adds a menu shortcut, and uses the **system Tor** —
-no embedded binary on Linux.
+[**Releases**](../../releases) and `sudo apt install ./*.deb` (resolves
+deps automatically). Installs to `/opt`, adds a menu shortcut, and uses
+the **system Tor** — no embedded binary on Linux.
 
-**From source:**
+**From source (minimal/server installs also need Qt system libs):**
 
 ```bash
-sudo apt install -y tor obfs4proxy python3-pyqt6 python3-pip python3-venv
+sudo apt install -y tor obfs4proxy python3-pyqt6 python3-pip python3-venv \
+  libgl1 libegl1 libxkbcommon0 libdbus-1-3 libfontconfig1 fonts-dejavu-core
 git clone https://github.com/Abaddon2010/anonymous-shield.git
 cd anonymous-shield/anonymous-shield
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python3 main.py
 ```
+(`libgl1…` = system Qt libs that pip's PyQt6 needs; without them you get
+`ImportError: libGL.so`. Prefer the `.deb` — apt resolves it all.)
 
 Linux firewall kill-switch uses **nftables** (root via pkexec) with an
 allowlist of current guards; system proxy via GNOME. Snowflake is

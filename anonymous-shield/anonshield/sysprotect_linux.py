@@ -37,18 +37,21 @@ def _gsettings() -> None:
 
 def get_proxy():
     from .sysprotect import SysProxy as _SP
-    _gsettings()
-    ok, mode = _run(["gsettings", "get", "org.gnome.system.proxy", "mode"])
-    mode = (mode or "").strip().strip("'")
-    okh, host = _run(["gsettings", "get", "org.gnome.system.proxy.socks", "host"])
-    okp, port = _run(["gsettings", "get", "org.gnome.system.proxy.socks", "port"])
-    host = (host or "").strip().strip("'")
     try:
-        port_i = int((port or "0").strip())
-    except ValueError:
-        port_i = 0
-    server = f"socks={host}:{port_i}" if host and port_i else ""
-    return _SP(enabled=(mode == "manual" and bool(server)), server=server, bypass="")
+        _gsettings()
+        ok, mode = _run(["gsettings", "get", "org.gnome.system.proxy", "mode"])
+        mode = (mode or "").strip().strip("'")
+        okh, host = _run(["gsettings", "get", "org.gnome.system.proxy.socks", "host"])
+        okp, port = _run(["gsettings", "get", "org.gnome.system.proxy.socks", "port"])
+        host = (host or "").strip().strip("'")
+        try:
+            port_i = int((port or "0").strip())
+        except ValueError:
+            port_i = 0
+        server = f"socks={host}:{port_i}" if host and port_i else ""
+        return _SP(enabled=(mode == "manual" and bool(server)), server=server, bypass="")
+    except Exception:
+        return _SP(enabled=False)
 
 
 def set_proxy(port: int):
@@ -114,53 +117,64 @@ def build_nft_script(v4: list[str], v6: list[str]) -> str:
     essencial passa (loopback, estabelecidas, DHCP, TCP p/ guardas)."""
     e4 = ", ".join(v4) if v4 else "255.255.255.254"
     e6 = ", ".join(v6) if v6 else "::ffff:255.255.255.254"
-    return f"""delete table inet {TABLE}
-add table inet {TABLE}
+    return f"""add table inet {TABLE}
 add set inet {TABLE} tor_guards {{ type ipv4_addr; flags interval; elements = {{ {e4} }} }}
 add set inet {TABLE} tor6_guards {{ type ipv6_addr; flags interval; elements = {{ {e6} }} }}
 add chain inet {TABLE} output {{ type filter hook output priority 0; policy drop; }}
 add rule inet {TABLE} output iif "lo" accept
 add rule inet {TABLE} output ct state established,related accept
 add rule inet {TABLE} output udp dport 67 ip daddr 255.255.255.255 accept
-add rule inet {TABLE} output ip daddr @tor_guards tcp accept
-add rule inet {TABLE} output ip6 daddr @tor6_guards tcp accept
+add rule inet {TABLE} output ip daddr @tor_guards meta l4proto tcp accept
+add rule inet {TABLE} output ip6 daddr @tor6_guards meta l4proto tcp accept
 """
+
+
+def _nft_admin(args: list[str]) -> tuple[bool, str]:
+    """nft com root: direto se euid==0, senão via pkexec."""
+    try:
+        if os.geteuid() == 0:
+            return _run(["nft"] + args, timeout=60)
+    except AttributeError:
+        pass
+    if _have("pkexec"):
+        return _run(["pkexec", "nft"] + args, timeout=60)
+    return False, "sem root (rode como root ou instale policykit-1 p/ pkexec)"
 
 
 def _pkexec_nft(script: str) -> None:
     if not _have("nft"):
         raise RuntimeError("nftables ausente: sudo apt install nftables")
-    if not _have("pkexec"):
-        raise RuntimeError("pkexec ausente (root necessário p/ firewall)")
     fd, path = tempfile.mkstemp(prefix="anonshield-nft-", suffix=".nft")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             f.write(script)
         os.chmod(path, 0o600)
-        ok, out = _run(["pkexec", "nft", "-f", path], timeout=60)
+        ok, out = _nft_admin(["-f", path])
     finally:
         try:
             os.remove(path)
         except OSError:
             pass
     if not ok:
-        raise RuntimeError((out or "pkexec/nft falhou")[:300])
+        raise RuntimeError((out or "nft falhou")[:300])
 
 
 def firewall_block() -> None:
+    # Apaga resto anterior (ignora "não existe") e aplica do zero.
+    _nft_admin(["delete", "table", "inet", TABLE])
     _pkexec_nft(build_nft_script(_GUARDS_V4, _GUARDS_V6))
 
 
 def refresh_linux_guards() -> bool:
     """Reaplica só os sets de guardas (sem reconstruir a tabela)."""
+    if not _have("nft"):
+        return False
     for fam, name, ips in (("ip", "tor_guards", _GUARDS_V4),
                            ("ip6", "tor6_guards", _GUARDS_V6)):
-        if not _have("nft") or not _have("pkexec"):
-            return False
-        _run(["pkexec", "nft", "flush", "set", "inet", TABLE, name], timeout=60)
+        _nft_admin(["flush", "set", "inet", TABLE, name])
         if ips:
-            _run(["pkexec", "nft", "add", "element", "inet", TABLE, name,
-                  "{ " + ", ".join(ips) + " }"], timeout=60)
+            _nft_admin(["add", "element", "inet", TABLE, name,
+                        "{ " + ", ".join(ips) + " }"])
     return True
 
 
@@ -174,10 +188,7 @@ def firewall_active() -> bool:
 def firewall_unblock() -> None:
     if not _have("nft"):
         return
-    if _have("pkexec"):
-        _run(["pkexec", "nft", "delete", "table", "inet", TABLE], timeout=60)
-    else:
-        _run(["nft", "delete", "table", "inet", TABLE], timeout=60)
+    _nft_admin(["delete", "table", "inet", TABLE])
 
 
 # ---------- sondas POSIX ----------

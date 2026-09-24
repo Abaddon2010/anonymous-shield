@@ -880,6 +880,8 @@ class UiLogic:
         self.lbl_vault_title.setText(T("vault_title"))
         self.lbl_vault_desc.setText(T("vault_desc"))
         self.btn_vault.setText(T("vault_change_btn"))
+        self.btn_duress.setText(T("duress_btn"))
+        self.lbl_duress.setText(T("duress_desc"))
 
     def _change_password(self) -> None:
         from PyQt6.QtWidgets import QDialog, QMessageBox
@@ -906,6 +908,48 @@ class UiLogic:
         self.cfg.password = new
         self.cfg.save()
         self._push_log(self.tr("vault_changed"))
+
+    def _duress_dialog(self) -> None:
+        """Define/remove a senha de coação (apaga o perfil se digitada no login)."""
+        from PyQt6.QtWidgets import QDialog, QMessageBox
+        from . import users as _users
+        from .gui import PassDialog
+        uid = (getattr(self.cfg, "current_uid", "") or "").strip()
+        if not uid:
+            QMessageBox.information(
+                self, "Anonymous Shield", self.tr("duress_guest"))
+            return
+        if _users.has_duress(uid):
+            ans = QMessageBox.question(
+                self, "Anonymous Shield", self.tr("duress_remove_q"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+            if ans == QMessageBox.StandardButton.Yes:
+                _users.clear_duress(uid)
+                self._push_log(self.tr("duress_cleared"))
+                self.refresh_texts()
+                return
+        d = PassDialog(self, "change", self.cfg.lang)
+        try:
+            d.setWindowTitle(self.tr("duress_title"))
+        except (RuntimeError, AttributeError):
+            pass
+        if d.exec() != QDialog.DialogCode.Accepted:
+            return
+        cur, new, conf = d.values()
+        if not _users.verify_user(uid, cur):
+            QMessageBox.warning(self, "Anonymous Shield", self.tr("vault_wrong"))
+            return
+        if len(new) < 8 or new != conf:
+            QMessageBox.warning(self, "Anonymous Shield", self.tr("vault_mismatch"))
+            return
+        try:
+            _users.set_duress(uid, new)
+        except ValueError:
+            QMessageBox.warning(self, "Anonymous Shield", self.tr("duress_same"))
+            return
+        QMessageBox.warning(self, "Anonymous Shield", self.tr("duress_warn"))
+        self._push_log(self.tr("duress_ok"))
+        self.refresh_texts()
 
     def _cfg_dir(self) -> str:
         from .config import app_dirs

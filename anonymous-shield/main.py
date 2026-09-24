@@ -143,6 +143,7 @@ def main() -> int:
         from anonshield.config import set_data_dir as _set
         _set(users_mod.user_dir(login.result_id))
         cfg = AppConfig.load(login.result_pw)
+        cfg.current_uid = login.result_id
         if getattr(login, "_lang", "") and login._lang != cfg.lang:
             cfg.lang = login._lang
             cfg.save()

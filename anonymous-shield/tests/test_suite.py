@@ -82,6 +82,7 @@ def test_linux_nft_script_e_guards():
     assert ok == ["1.2.3.4", "2606:4700:4700::1111"], ok
     s = _lx.build_nft_script(["1.2.3.4"], ["2606:4700:4700::1111"])
     assert "policy drop" in s and "1.2.3.4" in s and "2606:4700:4700::1111" in s
+    assert "meta l4proto tcp" in s  # `tcp` puro é sintaxe inválida no nft
     assert "rm -rf" not in s and "table inet anonshield" in s
     assert "dport 53" not in s  # DNS bloqueado por padrão
     s2 = _lx.build_nft_script([], [])
@@ -190,7 +191,10 @@ def test_i18n_chaves_novas():
             "net_dns", "net_tcp", "net_http", "net_ok", "net_fail",
             "upd_repo_locked", "upd_repo_tip",
             "mode_stealth", "mode_desc_stealth", "mode_need_vpn",
-            "br_mail", "br_tg"]
+            "br_mail", "br_tg",
+            "duress_btn", "duress_desc", "duress_title", "duress_guest",
+            "duress_ok", "duress_cleared", "duress_same", "duress_warn",
+            "duress_remove_q"]
     for lang in ("pt-BR", "en", "es"):
         for k in keys:
             v = t(lang, k)
@@ -206,6 +210,36 @@ def test_net_full_structured():
     d = test_direct_net_full()
     assert set(d) >= {"dns_ok", "tcp_ok", "http_ok", "text"}
     assert isinstance(d["text"], str) and d["text"]
+
+
+def test_duress_ciclo(tmp_path, monkeypatch):
+    import anonshield.config as _cfg
+    import anonshield.users as _u
+    monkeypatch.setattr(_cfg, "set_data_dir", lambda p: None)
+    monkeypatch.setattr(_cfg, "app_dirs",
+                        lambda: (str(tmp_path), str(tmp_path)))
+    uid = _u.create_user("vitima", "senha-real-123")
+    assert not _u.has_duress(uid)
+    assert not _u.check_duress(uid, "qualquer-coisa")
+    try:
+        _u.set_duress(uid, "senha-real-123")
+        raise AssertionError("igual à real deveria falhar")
+    except ValueError:
+        pass
+    try:
+        _u.set_duress(uid, "curta")
+        raise AssertionError("curta deveria falhar")
+    except ValueError:
+        pass
+    _u.set_duress(uid, "coacao-falsa-456")
+    assert _u.has_duress(uid)
+    assert _u.check_duress(uid, "coacao-falsa-456")
+    assert not _u.check_duress(uid, "senha-real-123")
+    assert _u.verify_user(uid, "senha-real-123")  # real intacta
+    assert _u.duress_wipe(uid) is True
+    assert _u.list_users() == []
+    assert not os.path.exists(_u.user_dir(uid))
+    assert _u.duress_wipe(uid) is False
 
 
 def test_torrc_rejeita_bridge_invalida(tmp_path):
