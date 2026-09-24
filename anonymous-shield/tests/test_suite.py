@@ -194,7 +194,8 @@ def test_i18n_chaves_novas():
             "br_mail", "br_tg",
             "duress_btn", "duress_desc", "duress_title", "duress_guest",
             "duress_ok", "duress_cleared", "duress_same", "duress_warn",
-            "duress_remove_q"]
+            "duress_remove_q",
+            "pt_hint_win", "pt_hint_lin"]
     for lang in ("pt-BR", "en", "es"):
         for k in keys:
             v = t(lang, k)
@@ -312,3 +313,13 @@ def test_ovpn_mgmt_handshake():
     blob = b"".join(script)
     assert b'username "Auth" "userx"' in blob and b'password "Auth" "s3nh4"' in blob
     assert blob.strip().endswith(b"hold release")
+
+
+def test_multiplataforma_nomes_e_paths():
+    from anonshield import sysprotect as _sp
+    assert "firefox" in _sp._FIREFOX_EXES and "firefox.exe" in _sp._FIREFOX_EXES
+    assert "google-chrome" in _sp._CHROMIUM_EXES and "chrome.exe" in _sp._CHROMIUM_EXES
+    apps = _sp.detect_apps()
+    assert isinstance(apps, list)
+    for a in apps:
+        assert os.path.exists(_sp.expand(a["path"]))

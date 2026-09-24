@@ -813,6 +813,24 @@ def detect_apps() -> list[dict]:
         if p:
             out.append({"name": name, "path": p, "enabled": True, "custom": False})
 
+    if os.name != "nt":
+        import shutil as _sh
+        for name, bins in (
+            ("Chrome", ("google-chrome", "google-chrome-stable", "chrome")),
+            ("Chromium", ("chromium", "chromium-browser")),
+            ("Firefox", ("firefox",)),
+            ("Brave", ("brave", "brave-browser")),
+            ("Edge", ("microsoft-edge",)),
+            ("Discord", ("discord",)),
+            ("Telegram", ("telegram-desktop", "telegram")),
+        ):
+            for b in bins:
+                p = _sh.which(b)
+                if p:
+                    add(name, p)
+                    break
+        return out
+
     add("Chrome", _env_path("PROGRAMFILES", r"Google\Chrome\Application\chrome.exe")
         or _env_path("LOCALAPPDATA", r"Google\Chrome\Application\chrome.exe"))
     add("Edge", _env_path("PROGRAMFILES", r"Microsoft\Edge\Application\msedge.exe")
@@ -827,7 +845,11 @@ def detect_apps() -> list[dict]:
 
 
 _CHROMIUM_EXES = ("chrome.exe", "msedge.exe", "brave.exe", "opera.exe",
-                  "vivaldi.exe", "arc.exe")
+                  "vivaldi.exe", "arc.exe",
+                  "chrome", "chromium", "chromium-browser", "google-chrome",
+                  "google-chrome-stable", "msedge", "microsoft-edge",
+                  "brave", "brave-browser", "opera", "vivaldi")
+_FIREFOX_EXES = ("firefox.exe", "firefox")
 
 
 def _tor_profile_dir(kind: str) -> str:
@@ -911,7 +933,7 @@ def launch_with_proxy(path: str, port: int, url: str = "") -> str:
                 f"--user-data-dir={prof}", "--no-first-run", "--new-window",
                 *extra])
         return "perfil Tor dedicado + --proxy-server + anti-WebRTC"
-    if base == "firefox.exe":
+    if base in _FIREFOX_EXES:
         prof = _firefox_tor_profile(port)
         _spawn([real, "-profile", prof, "-no-remote", "-new-instance", *extra])
         return "perfil Firefox Tor (WebRTC off)"

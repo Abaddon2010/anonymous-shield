@@ -565,7 +565,8 @@ class UiLogic:
         self.lbl_direct_info.setText(T("br_direct_info"))
         self.lbl_direct_info.setVisible(self.cfg.bridge_preset == "direto")
         self.lbl_pt.setText(T("pt_path"))
-        self.edit_pt.setPlaceholderText(T("pt_hint"))
+        self.edit_pt.setPlaceholderText(
+            T("pt_hint_win") if os.name == "nt" else T("pt_hint_lin"))
         self.lbl_br_lines.setText(T("br_lines"))
         self.edit_bridges.setPlaceholderText(T("br_hint"))
         self.btn_paste.setText(T("paste"))
@@ -1570,8 +1571,10 @@ class UiLogic:
             pass
         big = self.tr("st_connected") if self.connected else (f"{pct}%" if self.connecting else self.tr("st_off"))
         col = "#10b981" if self.connected else ("#f59e0b" if self.connecting else ("#64748b" if self.cfg.theme == "light" else "#78788a"))
-        self.lbl_bigstatus.setText(big)
-        self.lbl_bigstatus.setStyleSheet(f"font-size: 30px; font-weight: bold; color: {col};")
+        if getattr(self, "_tick_big", None) != (big, col):
+            self._tick_big = (big, col)
+            self.lbl_bigstatus.setText(big)
+            self.lbl_bigstatus.setStyleSheet(f"font-size: 30px; font-weight: bold; color: {col};")
         self.btn_cancel.setVisible(self.connecting and not self.connected)
         if self.connecting:
             pct = int(self.progress * 100)

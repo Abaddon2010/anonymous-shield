@@ -15,6 +15,11 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+# Fora do bundle (ficam no repo): tar-fonte 21 MB (só os extraídos são
+# usados) e tor-gencert (só p/ relays).
+a.datas = [x for x in a.datas
+           if "tor-expert.tar.gz" not in str(x[0]).replace("\\", "/")
+           and "tor-gencert" not in str(x[0]).replace("\\", "/")]
 pyz = PYZ(a.pure)
 
 exe = EXE(

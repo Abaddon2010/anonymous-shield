@@ -1,5 +1,24 @@
 # Changelog — Anonymous Shield
 
+## [1.8.3] — 2026-09-24 — Coação, Furtivo, Linux completo, auditoria
+
+### Adicionado
+- 🔑 Senha de coação: senha falsa que apaga o perfil e abre convidado vazio.
+- 🥷 Modo Furtivo (1 clique): VPN + obfs4 + nunca-armazenar-logs.
+- 📊 Teste de rede com cards gráficos (DNS/TCP/HTTP + latência).
+- 🔒 Repositório de update travado no oficial (campo só-leitura + auto-reversão).
+- ✉✈ Pontes alternativas: pedir por e-mail (BridgeDB) e Telegram (@GetBridgesBot).
+- 🐧 Linux: Tor/PTs do sistema, kill-switch nftables, proxy GNOME, `.deb` + CI.
+- ⓘ Página Sobre com licenças integrais (Apache-2.0/GPL-3.0 próprias + terceiros).
+- 🚫 Nunca armazenar logs; validação estrita de bridges; dicas na sidebar.
+- Auditoria: OpenVPN sem arquivo (management), torrc defensivo, forense
+  sanitizada, pin SHA-256 do tor.exe, checagem mensal do Tor estável.
+- Otimização: −27 MB no exe (fora tar-fonte e tor-gencert), tick sem reparse.
+
+### Corrigido
+- Rota sem contradição; KPIs em padrão PT; placeholder PT por plataforma;
+  detecção de apps/navegadores no Linux; `get_proxy` sem GNOME não quebra.
+
 ## [1.8.2] — 2026-09-23 — Bridges confiáveis + Furtivo + Linux completo
 
 ### Verificado
