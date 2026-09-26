@@ -1282,6 +1282,10 @@ class UiLogic:
         if self.pending_protect:
             self.pending_protect = False
             self._sysproxy_on()
+        if getattr(self, "pending_fw", False):
+            self.pending_fw = False
+            if self.cfg.protect_total and not self.cfg.firewall_on:
+                self._fw_toggled(True)
         # DNSCrypt local/combinado sobe junto com o Tor.
         if (self.cfg.dnscrypt_enabled
                 and self.cfg.dnscrypt_mode in ("local", "combined")
@@ -2015,8 +2019,13 @@ cert_refresh_delay = 240
                     self._push_log(self.tr("log_socks_on", p=self.cfg.socks_port))
                     self._sysproxy_on()
             # Tudo pelo Tor ou sem internet: bloqueia o resto no firewall.
-            if not self.cfg.firewall_on:
-                self._fw_toggled(True)
+            if not self.cfg.firewall_on and self.cfg.protect_total:
+                if os.name != "nt" and not self.connected:
+                    # Linux: sem guardas conhecidos o nft travaria o bootstrap;
+                    # aplica após conectar (ver _on_connected).
+                    self.pending_fw = True
+                else:
+                    self._fw_toggled(True)
         else:
             self.cfg.protect_total = False
             self.pending_protect = False

@@ -1,5 +1,12 @@
 # Changelog — Anonymous Shield
 
+## [1.8.5] — 2026-09-26 — Proteção total sem dessincronia
+
+### Corrigido
+- Firewall só dispara com flag confirmado; rollback desfaz tudo (sem meio-ligado).
+- Linux: kill-switch adiado para após conectar (sem travar o bootstrap).
+- Trava anti-corrida em cliques rápidos no interruptor.
+
 ## [1.8.4] — 2026-09-24 — Correções validadas em campo (Linux)
 
 ### Corrigido

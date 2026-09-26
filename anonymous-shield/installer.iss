@@ -2,7 +2,7 @@
 ; Requer: Inno Setup 6 + dist\AnonymousShield.exe já construído (PyInstaller).
 ; Compilar: iscc installer.iss
 #define MyAppName "Anonymous Shield"
-#define MyAppVersion "1.8.4"
+#define MyAppVersion "1.8.5"
 #define MyAppPublisher "Anonymous Shield"
 #define MyAppURL "https://www.torproject.org/"
 #define MyAppExeName "AnonymousShield.exe"

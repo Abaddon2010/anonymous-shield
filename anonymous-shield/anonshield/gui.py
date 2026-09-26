@@ -476,6 +476,7 @@ class MainWindow(QMainWindow):
         self.dns_running = False
         self.dns_addr = ""
         self.pending_protect = False
+        self.pending_fw = False
         self.another = False
         self._lock_sock = None
         self._tor_thread: TorThread | None = None
