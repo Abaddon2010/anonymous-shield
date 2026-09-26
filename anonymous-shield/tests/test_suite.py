@@ -195,7 +195,8 @@ def test_i18n_chaves_novas():
             "duress_btn", "duress_desc", "duress_title", "duress_guest",
             "duress_ok", "duress_cleared", "duress_same", "duress_warn",
             "duress_remove_q",
-            "pt_hint_win", "pt_hint_lin"]
+            "pt_hint_win", "pt_hint_lin",
+            "total_rollback"]
     for lang in ("pt-BR", "en", "es"):
         for k in keys:
             v = t(lang, k)

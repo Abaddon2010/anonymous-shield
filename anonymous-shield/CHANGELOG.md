@@ -1,5 +1,14 @@
 # Changelog — Anonymous Shield
 
+## [1.8.4] — 2026-09-24 — Correções validadas em campo (Linux)
+
+### Corrigido
+- Kill-switch Linux: fallback sem pkexec, sintaxe nft, tabela idempotente.
+- `get_proxy` sem GNOME degrada em vez de quebrar; teste sem locale fixo.
+- Rota sem contradição; KPIs em padrão PT; placeholder PT por plataforma.
+- Rollback total da proteção total (sem estado meio-ligado).
+- Dicas na sidebar; detecção de apps/navegadores no Linux; exe −27 MB.
+
 ## [1.8.3] — 2026-09-24 — Coação, Furtivo, Linux completo, auditoria
 
 ### Adicionado

@@ -2043,8 +2043,16 @@ cert_refresh_delay = 240
             self._push_log(self.tr("w_fw_allowed") if False else f"✓ socks=127.0.0.1:{self.cfg.socks_port}")
         except Exception as e:  # noqa: BLE001
             self._push_log(f"✗ {e}")
+            # Rollback total: sem proxy não há proteção total — desliga
+            # também o firewall p/ não travar a net com flag apagado.
             self.cfg.protect_total = False
+            try:
+                sysprotect.firewall_unblock()
+            except Exception:
+                pass
+            self.cfg.firewall_on = False
             self.cfg.save()
+            self._push_log(self.tr("total_rollback"))
         self.refresh_texts()
 
     def _fw_tor_exes(self) -> list:
@@ -2087,9 +2095,18 @@ cert_refresh_delay = 240
             def _apply() -> None:
                 try:
                     if outcome["kind"] == "on":
-                        self.cfg.firewall_on = True
-                        if outcome["detail"] not in ("", "0"):
-                            self._push_log(self.tr("fw_vpn_extra", n=outcome["detail"]))
+                        if not self.cfg.protect_total:
+                            # Usuário desligou (ou rollback) enquanto o job rodava:
+                            # desfaz em vez de deixar meio-ligado.
+                            try:
+                                sysprotect.firewall_unblock()
+                            except Exception:
+                                pass
+                            self.cfg.firewall_on = False
+                        else:
+                            self.cfg.firewall_on = True
+                            if outcome["detail"] not in ("", "0"):
+                                self._push_log(self.tr("fw_vpn_extra", n=outcome["detail"]))
                     elif outcome["kind"] == "off":
                         self.cfg.firewall_on = False
                     elif outcome["kind"] == "noadmin":
